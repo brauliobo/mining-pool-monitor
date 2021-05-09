@@ -4,6 +4,6 @@ require_relative '../monitor'
 
 loop do
   Eth.new.process
-  sleep 1.hour
+  sleep 30.minutes
 end
 

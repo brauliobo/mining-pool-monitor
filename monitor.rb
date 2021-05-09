@@ -8,4 +8,3 @@ Dotenv.load! '.env'
 require_relative 'db'
 require_relative 'eth'
 
-

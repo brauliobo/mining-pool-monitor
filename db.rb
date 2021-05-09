@@ -14,3 +14,5 @@ DB.create_table :wallets do
   index [:coin, :pool, :wallet]
 end unless :wallets.in? DB.tables
 
+DB.run File.read 'views.sql'
+

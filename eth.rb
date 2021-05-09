@@ -48,7 +48,7 @@ class Eth
         w = i.wallet.downcase.gsub(/^0x/, '')
         Hashie::Mash.new(
           balance:  get(i.balance, w: w).totalUnpaid,
-          hashrate: get(i.stats, w: w).hashrate.to_i / 1.0e6,
+          hashrate: get(i.stats, w: w).reportedHashrate.to_i / 1.0e6,
         )
       },
     },
