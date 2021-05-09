@@ -17,10 +17,10 @@ create view balances as
   select
     p.pool,
     p.wallet,
-    (julianday(p2.read_at) - julianday(p.read_at)) * 24 as hours,
-	(p.reported_hashrate + p2.reported_hashrate) / 2 as hashrate,
+    round((julianday(p2.read_at) - julianday(p.read_at)) * 24, 1) as hours,
+    round((p.reported_hashrate + p2.reported_hashrate) / 2, 1) as hashrate,
     p.reported_hashrate  as first_hashrate,
-	p2.reported_hashrate as second_hashrate,
+    p2.reported_hashrate as second_hashrate,
     p.balance  as first_balance,
     p2.balance as second_balance,
     p.read_at  as first_read_at,

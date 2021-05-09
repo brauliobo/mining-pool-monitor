@@ -14,7 +14,8 @@ class Eth
     ethermine: {
       url:     'https://api.ethermine.org/miner/%{w}/dashboard',
       process: -> i {
-        data = get(i.url, w: i.wallet).data
+        w = i.wallet.downcase.gsub(/^0x/, '')
+        data = get(i.url, w: w).data
         Hashie::Mash.new(
           balance:  data.currentStatistics.unpaid / 1.0e18,
           hashrate: data.currentStatistics.reportedHashrate / 1.0e6,

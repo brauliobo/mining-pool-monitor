@@ -1,3 +1,4 @@
+require 'active_support/all'
 require 'sequel'
 
 DB = Sequel.sqlite 'pools.db'
