@@ -61,5 +61,5 @@ create view last_readings as
   select r.*
   from readings r
   left join readings r2 on r2.pool = r.pool and r2.wallet = r.wallet and r2.last_read_at > r.last_read_at
-  where r2.last_read_at is null and r.hours > 1;
+  where r2.last_read_at is null;
 

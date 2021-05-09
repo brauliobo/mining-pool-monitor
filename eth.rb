@@ -79,6 +79,8 @@ class Eth
     data = Mechanize.new.get url % params
     data = Hashie::Mash.new JSON.parse data.body
     data
+  rescue
+    retry
   end
 
   def pool_fetch pool, opts = POOLS.eth[pool]
