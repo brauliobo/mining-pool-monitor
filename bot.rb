@@ -3,6 +3,8 @@ require 'tabulo'
 
 class TelegramBot
 
+  ADMIN_CHAT_ID = ENV['ADMIN_CHAT_ID'].to_i
+
   def initialize token
     @eth   = Eth.new
     @token = token
@@ -64,7 +66,7 @@ EOS
       when /echo/
         send_message msg, msg.inspect
       when /exit/
-        return unless msg.from.id
+        return unless from_admin? msg
         @exit = true
       else
         puts "ignoring message: #{text}"
@@ -74,6 +76,10 @@ EOS
     send_message msg, "error: #{e e.message}"
     STDERR.puts "#{e.message}: #{e.backtrace.join "\n"}"
     raise
+  end
+
+  def from_admin? msg
+    msg.from.id == ADMIN_CHAT_ID
   end
 
   def db_data ds
