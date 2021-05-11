@@ -18,12 +18,12 @@ create view balances as
     p.pool,
     p.wallet,
     round((julianday(p2.read_at) - julianday(p.read_at)) * 24, 2) as hours,
-    round((p.reported_hashrate + p2.reported_hashrate) / 2, 2) as hashrate,
+    round((p.reported_hashrate + p2.reported_hashrate) / 2, 2) as average_hashrate,
     round(p.reported_hashrate, 2)  as first_hashrate,
-    round(p2.reported_hashrate, 2) as second_hashrate,
     p.balance  as first_balance,
-    p2.balance as second_balance,
     p.read_at  as first_read_at,
+    round(p2.reported_hashrate, 2) as second_hashrate,
+    p2.balance as second_balance,
     p2.read_at as second_read_at
   from recent_points p
   join recent_points p2 on p2.pool = p.pool and p2.wallet = p.wallet
@@ -39,7 +39,7 @@ create view rewards as
     wallet,
     second_read_at as last_read_at,
     hours,
-    hashrate,
+    average_hashrate as hashrate,
     second_balance - first_balance as reward
   from balances
   group by pool, wallet, hours;
