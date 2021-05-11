@@ -29,7 +29,7 @@ create view balances as
   join recent_points p2 on p2.pool = p.pool and p2.wallet = p.wallet
    and p.row == 1 and p2.row > p.row
   where second_balance > first_balance 
-    and abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate < 0.01
+    and abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate < 0.02
   group by p.pool, p.wallet, hours;
 
 drop view if exists rewards;
@@ -68,7 +68,8 @@ drop view if exists pools;
 create view pools as 
   select 
     pool,
-    avg(eth_reward_per_mh_per_day) as eth_reward_per_mh_per_day
+    avg(eth_reward_per_mh_per_day) as eth_reward_per_mh_per_day,
+    hours
   from last_readings
   where hours > 6
   group by pool
