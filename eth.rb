@@ -1,6 +1,16 @@
 class Eth
 
   POOLS = SymMash.new(
+    crazypool: {
+      url:      'https://eth.crazypool.org/api/accounts/%{w}',
+      process:  -> i {
+        data = get i.url, w: i.wallet
+        SymMash.new(
+          balance:  data.stats.balance / 1.0e9,
+          hashrate: data.hashrate / 1.0e6,
+        )
+      }
+    },
     flexpool: {
       balance:  'https://flexpool.io/api/v1/miner/%{w}/balance/',
       hashrate: 'https://flexpool.io/api/v1/miner/%{w}/stats/',

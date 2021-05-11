@@ -14,7 +14,7 @@ class TelegramBot
 
       Thread.new do
         loop do
-          Eth.new.process if Time.now.min == 20 or Time.now.min == 50
+          Eth.new.process if Time.now.min.in? [0,20,40]
           send_report     if Time.now.min == 0
           sleep 1.minute
         end
