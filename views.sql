@@ -52,14 +52,24 @@ create view readings as
     hashrate,
     last_read_at,
     hours,
-    reward / hashrate as reward_per_mh
+    (24 / hours) * (reward / hashrate) as reward_per_mh_per_day
   from rewards
   group by pool, wallet, hours;
 
 drop view if exists last_readings;
 create view last_readings as 
-  select r.*
+  select 
+    r.*
   from readings r
   left join readings r2 on r2.pool = r.pool and r2.wallet = r.wallet and r2.last_read_at > r.last_read_at
   where r2.last_read_at is null;
+
+drop view if exists pools;
+create view pools as 
+  select 
+    pool,
+    avg(reward_per_mh_per_day) as reward_per_mh_per_day
+  from last_readings
+  where hours > 12
+  group by pool
 

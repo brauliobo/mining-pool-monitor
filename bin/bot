@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require_relative '../monitor'
+
+bot = TelegramBot.new ENV['TOKEN']
+bot.start
