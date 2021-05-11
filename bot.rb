@@ -36,6 +36,8 @@ class TelegramBot
       case text = msg.text
       when /^\/start/
         send_help msg
+      when /^\/help/
+        send_help msg
 
       when /^\/read (\w+) (0x\w+)/
         data = @eth.pool_read $1, $2
