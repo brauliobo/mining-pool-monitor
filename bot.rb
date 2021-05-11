@@ -55,7 +55,7 @@ EOS
           .where(pool: $1)
           .where{ hours > 6 }
           .group(:pool, :wallet).having{ Sequel.function :max, :hours }
-          .limit(10)
+          .limit(5)
         send_ds msg.chat.id, ds
 
       when /^\/monitor (\w+) (0x\w+)/i
