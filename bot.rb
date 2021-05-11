@@ -96,11 +96,11 @@ EOS
 
   def send_help msg
     help = <<-EOS
-/report
-/read <pool> <wallet>
+/*report*
+/*read* <pool> <wallet>
 /*#{e 'pool_last_readings'}* <pool>
 /*#{e 'last_readings'}*
-/monitor <pool> <wallet>
+/*monitor* <pool> <wallet>
 EOS
     send_message msg, help
   end
