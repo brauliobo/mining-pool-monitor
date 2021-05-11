@@ -10,27 +10,22 @@ class TelegramBot
 
   def start
     Telegram::Bot::Client.run @token, logger: Logger.new(STDOUT) do |bot|
-      puts "bot: started, listening"
       @bot = bot
+
+      Thread.new do
+        loop do
+          Eth.new.process if Time.now.min == 20 or Time.now.min == 50
+          send_report     if Time.now.min == 0
+          sleep 1.minute
+        end
+      end
+
+      puts "bot: started, listening"
       @bot.listen do |msg|
-        abort if @exit # trigger systemd restart
         Thread.new do
           react msg
         end
-      end
-
-      Thread.new do
-        loop do
-          Eth.new.process
-          sleep 29.minutes
-        end
-      end
-
-      Thread.new do
-        loop do
-          send_report
-          sleep 1.hour
-        end
+        Thread.new{ sleep 5 and abort } if @exit # wait for other msg processing and trigger systemd restart
       end
     end
   end
@@ -70,7 +65,7 @@ EOS
     raise
   end
 
-  def send_report chat_id = ENV['REPORT_CHAT_ID']
+  def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
     data = DB[:pools].all.map{ |p| SymMash.new p }
     text = Tabulo::Table.new(data, *data.first.keys).pack
     text = "<pre>#{text}</pre>"

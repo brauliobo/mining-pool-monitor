@@ -17,8 +17,8 @@ create view balances as
   select
     p.pool,
     p.wallet,
-    round((julianday(p2.read_at) - julianday(p.read_at)) * 24, 1) as hours,
-    round((p.reported_hashrate + p2.reported_hashrate) / 2, 1) as hashrate,
+    round((julianday(p2.read_at) - julianday(p.read_at)) * 24, 2) as hours,
+    round((p.reported_hashrate + p2.reported_hashrate) / 2, 2) as hashrate,
     p.reported_hashrate  as first_hashrate,
     p2.reported_hashrate as second_hashrate,
     p.balance  as first_balance,
@@ -70,6 +70,6 @@ create view pools as
     pool,
     avg(reward_per_mh_per_day) as reward_per_mh_per_day
   from last_readings
-  where hours > 12
+  where hours > 6
   group by pool
 
