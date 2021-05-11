@@ -32,7 +32,7 @@ class Eth
         )
       },
     },
-    eth2miners: {
+    '2miners': {
       url:     'https://eth.2miners.com/api/accounts/%{w}',
       process: -> i {
         data = get i.url, w: i.wallet
