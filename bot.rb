@@ -54,6 +54,7 @@ EOS
         ds = DB[:balances]
           .where(pool: $1)
           .group(:pool, :wallet).having{ Sequel.function :max, :hours }
+          .order(Sequel.desc(:hours))
           .limit(5)
         send_ds msg.chat.id, ds
 
