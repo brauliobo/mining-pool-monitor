@@ -82,17 +82,23 @@ EOS
     msg.from.id == ADMIN_CHAT_ID
   end
 
-  def db_data ds
-    data = ds.all.map{ |p| SymMash.new p }
+  def db_data ds, &block
+    data = ds.map do |p|
+      p = SymMash.new p
+      block.call p if block
+      p
+    end
     Tabulo::Table.new(data, *data.first.keys).pack
   end
 
   def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
-    send_ds chat_id, DB[:pools]
+    send_ds chat_id, DB[:pools] do |p|
+      p.eth_reward_per_mh_per_day = p.eth_reward_per_mh_per_day&.round 9
+    end
   end
 
-  def send_ds chat_id, ds
-    text = "<pre>#{db_data ds}</pre>"
+  def send_ds chat_id, ds, &block
+    text = "<pre>#{db_data ds, &block}</pre>"
     @bot.api.send_message(
       chat_id:    chat_id,
       text:       text,

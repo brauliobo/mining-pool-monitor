@@ -52,7 +52,7 @@ create view readings as
     hashrate,
     last_read_at,
     hours,
-    (24 / hours) * (reward / hashrate) as eth_reward_per_mh_per_day
+    round((24 / hours) * (reward / hashrate), 8) as eth_reward_per_mh_per_day
   from rewards
   group by pool, wallet, hours;
 
