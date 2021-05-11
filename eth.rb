@@ -42,6 +42,16 @@ class Eth
         )
       },
     },
+    viabtc: {
+      url:     'https://www.viabtc.com/res/observer/home?access_key=%{w}&coin=ETH',
+      process: -> i {
+        data = get(i.url, w: i.wallet).data
+        SymMash.new(
+          balance:  data.account_balance.to_f,
+          hashrate: data.hashrate_1day.to_f,
+        )
+      },
+    },
     f2pool: {
       url:     'https://api.f2pool.com/eth/%{w}',
       process: -> i {
