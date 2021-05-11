@@ -53,7 +53,6 @@ EOS
       when /^\/pool_last_readings (\w+)/
         ds = DB[:balances]
           .where(pool: $1)
-          .where{ hours > 6 }
           .group(:pool, :wallet).having{ Sequel.function :max, :hours }
           .limit(5)
         send_ds msg.chat.id, ds
