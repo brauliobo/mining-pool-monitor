@@ -14,8 +14,8 @@ class TelegramBot
 
       Thread.new do
         loop do
-          Eth.new.process if Time.now.min.in? [0,20,40]
           send_report     if Time.now.min == 0
+          Eth.new.process if Time.now.min.in? [0,20,40]
           sleep 1.minute
         end
       end
@@ -25,7 +25,7 @@ class TelegramBot
         Thread.new do
           react msg
         end
-        Thread.new{ sleep 5 and abort } if @exit # wait for other msg processing and trigger systemd restart
+        Thread.new{ sleep 1 and abort } if @exit # wait for other msg processing and trigger systemd restart
       end
     end
   end
@@ -40,15 +40,24 @@ class TelegramBot
       when /^\/read (\w+) (0x\w+)/
         data = @eth.pool_read $1, $2
         send_message msg, <<-EOS
-pool *#{$1}*, wallet *#{$2}*
-*balance*: #{data.balance}
-*hashrate*: #{data.hashrate}
+*#{$1}* *#{$2}*
+*balance*: #{data.balance} ETH
+*hashrate*: #{data.hashrate} MH/s
 EOS
 
       when /^\/report/
         send_report msg.chat.id
 
+      when /^\/pool_last_readings (\w+)/
+        ds = DB[:balances]
+          .where(pool: $1)
+          .where{ hours > 6 }
+          .group(:pool, :wallet).having{ Sequel.function :max, :hours }
+          .limit(10)
+        send_ds msg.chat.id, ds
+
       when /^\/monitor (\w+) (0x\w+)/i
+        raise 'not implemented yet'
 
       when /echo/
         send_message msg, msg.inspect
@@ -65,10 +74,17 @@ EOS
     raise
   end
 
+  def db_data ds
+    data = ds.all.map{ |p| SymMash.new p }
+    Tabulo::Table.new(data, *data.first.keys).pack
+  end
+
   def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
-    data = DB[:pools].all.map{ |p| SymMash.new p }
-    text = Tabulo::Table.new(data, *data.first.keys).pack
-    text = "<pre>#{text}</pre>"
+    send_ds chat_id, DB[:pools]
+  end
+
+  def send_ds chat_id, ds
+    text = "<pre>#{db_data ds}</pre>"
     @bot.api.send_message(
       chat_id:    chat_id,
       text:       text,
@@ -79,8 +95,9 @@ EOS
   def send_help msg
     help = <<-EOS
 /report
-/#{e 'last_readings'}
 /read <pool> <wallet>
+/*#{e 'pool_last_readings'}* <pool>
+/*#{e 'last_readings'}*
 /monitor <pool> <wallet>
 EOS
     send_message msg, help
