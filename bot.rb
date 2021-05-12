@@ -92,9 +92,7 @@ EOS
   end
 
   def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
-    send_ds chat_id, DB[:pools] do |p|
-      p.eth_reward_per_mh_per_day = p.eth_reward_per_mh_per_day&.round 9
-    end
+    send_ds chat_id, DB[:pools]
   end
 
   def send_ds chat_id, ds, &block
