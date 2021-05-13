@@ -126,7 +126,7 @@ class Eth
   end
 
   def pool_fetch pool
-    wallets(pool).map do |w|
+    wallets(pool).api_peach.map do |w|
       data  = pool_read pool, w
       next unless data
       puts "#{pool}: #{data.to_h}"
@@ -138,8 +138,8 @@ class Eth
     reference_time = Time.now
     POOLS.cpu_peach do |pool, opts|
       data = pool_fetch pool
-      data.api_peach do |d|
-        DB[:wallets].insert(
+      DB[:wallets].multi_insert(data.map do |d|
+        {
           coin:              'eth',
           pool:              pool.to_s,
           wallet:            d.wallet,
@@ -147,8 +147,8 @@ class Eth
           read_at:           d.read_at,
           reported_hashrate: d.hashrate,
           balance:           d.balance,
-        )
-      end unless ENV['DRY']
+        }
+      end) unless ENV['DRY']
     end
   end
 
