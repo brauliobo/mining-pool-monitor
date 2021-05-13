@@ -44,4 +44,3 @@ create view pools as
   group by pool
   order by `72h` desc;
 
-select * from pools
