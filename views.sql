@@ -6,7 +6,7 @@ create view periods as
     round((julianday(p2.read_at) - julianday(p.read_at)) * 24, 2) as hours,
     round((julianday(p2.read_at) - julianday(p.read_at)) * 24 / 12) * 12 as period,
     round((p.reported_hashrate + p2.reported_hashrate) / 2, 2) as hashrate,
-  p2.balance - p.balance as reward,
+    p2.balance - p.balance as reward,
     round(p.reported_hashrate, 2)  as first_hashrate,
     p.balance  as first_balance,
     p.read_at  as first_read_at,
