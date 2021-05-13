@@ -18,8 +18,8 @@ class TelegramBot
 
       Thread.new do
         loop do
-          send_report     if Time.now.min == 0
-          Eth.new.process if Time.now.min.in? [0,20,40]
+          send_report  if Time.now.min == 0
+          @eth.process if Time.now.min.in? [0,20,40]
           sleep 1.minute
         end
       end
@@ -46,7 +46,7 @@ class TelegramBot
       puts "/read #{$1} #{$2}"
       data = @eth.pool_read $1, $2
       send_message msg, <<-EOS
-*#{$1}* *#{$2}*
+#{Eth.url $1, $2}
 *balance*: #{data.balance} ETH
 *hashrate*: #{data.hashrate} MH/s
       EOS
@@ -73,7 +73,7 @@ class TelegramBot
       send_ds msg.chat.id, ds
 
     when /^\/monitor (\w+) (#{WRX})/i
-      raise 'not implemented yet'
+      raise '/monitor: not implemented yet'
 
     when /echo/
       send_message msg, msg.inspect

@@ -2,9 +2,10 @@ class Eth
 
   POOLS = SymMash.new(
     crazypool: {
-      url:      'https://eth.crazypool.org/api/accounts/%{w}',
+      url:      'https://eth.crazypool.org/#/account/%{w}',
+      api:      'https://eth.crazypool.org/api/accounts/%{w}',
       process:  -> i {
-        data = get i.url, w: i.wallet
+        data = get i.api, w: i.wallet
         SymMash.new(
           balance:  data.stats.balance / 1.0e9,
           hashrate: data.hashrate / 1.0e6,
@@ -12,6 +13,7 @@ class Eth
       }
     },
     flexpool: {
+      url:      'https://flexpool.io/%{w}',
       balance:  'https://flexpool.io/api/v1/miner/%{w}/balance/',
       hashrate: 'https://flexpool.io/api/v1/miner/%{w}/stats/',
       process:  -> i {
@@ -22,10 +24,11 @@ class Eth
       },
     },
     ethermine: {
-      url:     'https://api.ethermine.org/miner/%{w}/dashboard',
+      url:     'https://ethermine.org/miners/%{w}',
+      api:     'https://api.ethermine.org/miner/%{w}/dashboard',
       process: -> i {
         w = i.wallet.downcase.gsub(/^0x/, '')
-        data = get(i.url, w: w).data
+        data = get(i.api, w: w).data
         SymMash.new(
           balance:  data.currentStatistics.unpaid / 1.0e18,
           hashrate: data.currentStatistics.reportedHashrate / 1.0e6,
@@ -33,9 +36,10 @@ class Eth
       },
     },
     '2miners': {
-      url:     'https://eth.2miners.com/api/accounts/%{w}',
+      url:     'https://eth.2miners.com/account/%{w}',
+      api:     'https://eth.2miners.com/api/accounts/%{w}',
       process: -> i {
-        data = get i.url, w: i.wallet
+        data = get i.api, w: i.wallet
         SymMash.new(
           balance:  data.stats.balance / 1.0e9,
           hashrate: data.hashrate / 1.0e6,
@@ -43,9 +47,9 @@ class Eth
       },
     },
     viabtc: {
-      url:     'https://www.viabtc.com/res/observer/home?access_key=%{w}&coin=ETH',
+      api:     'https://www.viabtc.com/res/observer/home?access_key=%{w}&coin=ETH',
       process: -> i {
-        data = get(i.url, w: i.wallet).data
+        data = get(i.api, w: i.wallet).data
         SymMash.new(
           balance:  data.account_balance.to_f,
           hashrate: data.hashrate_1day.to_f,
@@ -53,9 +57,10 @@ class Eth
       },
     },
     f2pool: {
-      url:     'https://api.f2pool.com/eth/%{w}',
+      url:     'https://www.f2pool.com/eth/%{w}',
+      api:     'https://api.f2pool.com/eth/%{w}',
       process: -> i {
-        data = get i.url, w: i.wallet
+        data = get i.api, w: i.wallet
         SymMash.new(
           balance:  data.balance,
           hashrate: data.local_hash / 1.0e6,
@@ -63,6 +68,7 @@ class Eth
       },
     },
     hiveon: {
+      url:     'https://hiveon.net/eth?miner=%{w}',
       stats:   'https://hiveon.net/api/v1/stats/miner/%{w}/ETH',
       balance: 'https://hiveon.net/api/v1/stats/miner/%{w}/ETH/billing-acc',
       process: -> i {
@@ -74,9 +80,10 @@ class Eth
       },
     },
     nanopool: {
-      url:     'https://eth.nanopool.org/api/v1/load_account/%{w}',
+      url:     'https://eth.nanopool.org/account/%{w}',
+      api:     'https://eth.nanopool.org/api/v1/load_account/%{w}',
       process: -> i {
-        data = get(i.url, w: i.wallet).data.userParams
+        data = get(i.api, w: i.wallet).data.userParams
         SymMash.new(
           balance:  data.balance,
           hashrate: data.reported,
@@ -84,6 +91,7 @@ class Eth
       },
     },
     sparkpool: {
+      url:     'https://www.sparkpool.com/miner/%{w}/data?currency=ETH',
       balance: 'https://www.sparkpool.com/v1/bill/stats?miner=%{w}&currency=ETH',
       stats:   'https://www.sparkpool.com/v1/miner/stats?miner=%{w}&currency=ETH',
       process: -> i {
@@ -94,6 +102,10 @@ class Eth
       },
     },
   )
+
+  def self.url pool, wallet
+    POOLS[pool].url % {w: wallet}
+  end
 
   def get url, params
     data = Mechanize.new.get url % params
