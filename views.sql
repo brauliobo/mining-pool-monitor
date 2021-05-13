@@ -52,7 +52,7 @@ create view readings as
     hashrate,
     last_read_at,
     hours,
-    (24 / hours) * (reward / hashrate) as eth_reward_per_mh_per_day
+    (24 / hours) * (reward / hashrate) as eth_mh_day
   from rewards
   group by pool, wallet, hours;
 
@@ -68,10 +68,10 @@ drop view if exists pools;
 create view pools as 
   select 
     pool,
-    round(avg(eth_reward_per_mh_per_day), 8) as 'ETH/MH/DAY',
+    round(avg(eth_mh_day), 8) as 'ETH/MH/DAY',
     round(avg(hours), 2) as hours
   from last_readings
   where hours > 6
   group by pool
-  order by eth_reward_per_mh_per_day desc;
+  order by round(avg(eth_mh_day), 8) desc;
 
