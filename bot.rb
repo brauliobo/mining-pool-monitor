@@ -52,7 +52,7 @@ class TelegramBot
 EOS
 
     when /^\/report/
-      send_report msg.chat.id
+      send_report msg
 
     when /^\/wallet_readings (#{WRX}) ?(\d*)/
       puts "/wallet_readings: #{$1} #{$2}"
@@ -107,18 +107,18 @@ EOS
     end.pack
   end
 
-  def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
+  def send_report msg = SymMash.new(chat: {id: ENV['REPORT_CHAT_ID'].to_i})
     suffix  = "Each period is measured with the average of ETH rewarded per MH in a 24h timeframe."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
-    send_ds chat_id, DB[:pools], suffix: suffix
+    send_ds msg, DB[:pools], suffix: suffix
   end
 
-  def send_ds chat_id, ds, prefix: nil, suffix: nil, **params, &block
+  def send_ds msg, ds, prefix: nil, suffix: nil, **params, &block
     text = db_data ds, **params, &block
     text = "<pre>#{text}</pre>"
     text = "#{prefix}\n#{text}" if prefix
     text = "#{text}\n#{suffix}" if suffix
-    send_message SymMash.new(chat: {id: chat_id}), text, parse_mode: 'HTML'
+    send_message msg, text, parse_mode: 'HTML'
   end
 
   def send_help msg
@@ -126,7 +126,6 @@ EOS
 /*report*
 /*read* <pool> <wallet>
 /*#{e 'pool_last_readings'}* <pool> <period (12, 24, 48 or 72)>
-/*#{e 'last_readings'}*
 /*#{e 'wallet_readings'}* <wallet> <offset>
 /*monitor* <pool> <wallet>
 EOS
