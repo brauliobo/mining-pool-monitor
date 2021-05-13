@@ -25,7 +25,7 @@ create view rewards as select
   pool,
   round(avg(hours),2) as hours,
   period,
-  (24 / avg(hours)) * (avg(reward) / avg(hashrate)) as eth_mh_day
+  avg((24 / hours) * (reward / hashrate)) as eth_mh_day
 from periods
 group by pool, period;
 
