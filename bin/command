@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require_relative '../monitor'
+
+TelegramBot.define_method :send_message do |msg, text, *args|
+  puts text
+end
+
+bot = TelegramBot.new nil
+msg = ARGV[0]
+puts "reacting to message: #{msg}"
+bot.react SymMash.new(
+  text: msg,
+  chat: {},
+)

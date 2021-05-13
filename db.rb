@@ -3,6 +3,8 @@ require 'sequel'
 
 DB = Sequel.sqlite 'pools.db'
 
+Sequel.extension :core_extensions
+
 DB.create_table :wallets do
   String :coin
   String :pool

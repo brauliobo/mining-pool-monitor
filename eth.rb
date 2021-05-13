@@ -106,19 +106,19 @@ class Eth
   def pool_read pool, wallet
     input = POOLS[pool].merge wallet: wallet
     data  = instance_exec input, &input.process
-    raise "#{w}: hashrate 0" if data.hashrate.zero?
+    return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?
 
     data.wallet = wallet
     data
   end
 
   def pool_fetch pool
-    wallets = ENV["WALLETS_#{pool}"].squish.split
-    wallets.map do |w|
+    wallets(pool).map do |w|
       data  = pool_read pool, w
+      next unless data
       puts "#{pool}: #{data.to_h}"
       data
-    end
+    end.compact
   end
 
   def process
@@ -137,6 +137,10 @@ class Eth
         )
       end unless ENV['DRY']
     end
+  end
+
+  def wallets pool
+    ENV["WALLETS_#{pool}"].squish.split
   end
 
 end
