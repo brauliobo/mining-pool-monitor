@@ -49,7 +49,7 @@ class TelegramBot
 #{Eth.url $1, $2}
 *balance*: #{data.balance} ETH
 *hashrate*: #{data.hashrate} MH/s
-      EOS
+EOS
 
     when /^\/report/
       send_report msg.chat.id
@@ -92,7 +92,7 @@ class TelegramBot
     msg.from.id == ADMIN_CHAT_ID
   end
 
-  def db_data ds, prefix: nil, suffix: nil, aliases: {}, &block
+  def db_data ds, aliases: {}, &block
     data = ds.all
     return "no data returned" if data.blank?
     data = ds.map do |p|
@@ -100,25 +100,24 @@ class TelegramBot
       block.call p if block
       p
     end
-    data = Tabulo::Table.new data do |t|
+    Tabulo::Table.new data do |t|
       ds.first.keys.each do |k|
         t.add_column aliases[k] || k, &k
       end
     end.pack
-    data = "#{prefix}\n#{data}" if prefix
-    data = "#{data}\n#{suffix}" if suffix
-    data
   end
 
   def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
-    suffix  = "Each period is measured on the average of ETH rewarded per MH in a 24h timeframe."
+    suffix  = "Each period is measured with the average of ETH rewarded per MH in a 24h timeframe."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
     send_ds chat_id, DB[:pools], suffix: suffix
   end
 
-  def send_ds chat_id, ds, **params, &block
+  def send_ds chat_id, ds, prefix: nil, suffix: nil, **params, &block
     text = db_data ds, **params, &block
     text = "<pre>#{text}</pre>"
+    text = "#{prefix}\n#{text}" if prefix
+    text = "#{text}\n#{suffix}" if suffix
     send_message SymMash.new(chat: {id: chat_id}), text, parse_mode: 'HTML'
   end
 
@@ -126,7 +125,7 @@ class TelegramBot
     help = <<-EOS
 /*report*
 /*read* <pool> <wallet>
-/*#{e 'pool_last_readings'}* <pool>
+/*#{e 'pool_last_readings'}* <pool> <period (12, 24, 48 or 72)>
 /*#{e 'last_readings'}*
 /*#{e 'wallet_readings'}* <wallet> <offset>
 /*monitor* <pool> <wallet>
