@@ -120,7 +120,8 @@ class Eth
     data  = instance_exec input, &input.process
     return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?
 
-    data.wallet = wallet
+    data.wallet  = wallet
+    data.read_at = Time.now
     data
   end
 
@@ -135,15 +136,15 @@ class Eth
 
   def process
     reference_time = Time.now
-    POOLS.each do |pool, opts|
+    POOLS.cpu_peach do |pool, opts|
       data = pool_fetch pool
-      data.each do |d|
+      data.api_peach do |d|
         DB[:wallets].insert(
           coin:              'eth',
           pool:              pool.to_s,
           wallet:            d.wallet,
           reference_time:    reference_time,
-          read_at:           Time.now,
+          read_at:           d.read_at,
           reported_hashrate: d.hashrate,
           balance:           d.balance,
         )

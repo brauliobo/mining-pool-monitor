@@ -6,6 +6,7 @@ require 'mechanize'
 Dotenv.load! '.env'
 
 require_relative 'exts/sym_mash'
+require_relative 'exts/peach'
 
 require_relative 'db'
 require_relative 'eth'
