@@ -8,13 +8,12 @@ create view periods as select
   p2.balance - p.balance as reward,
   round(p.reported_hashrate, 2)  as first_hashrate,
   p.balance  as first_balance,
-  p.read_at  as first_read_at,
   round(p2.reported_hashrate, 2) as second_hashrate,
   p2.balance as second_balance,
-  p2.read_at as second_read_at
+  p2.read_at as last_read
 from wallets p
 join wallets p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.read_at > p.read_at
-where first_read_at > datetime('now', '-80 hour') and second_read_at > datetime('now', '-6 hour')
+where p.read_at > datetime('now', '-80 hour') and p2.read_at > datetime('now', '-6 hour')
   and hours >= 10 and period in (12,24,48,72)
   and second_balance > first_balance
   and 5 > 100 * abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate
