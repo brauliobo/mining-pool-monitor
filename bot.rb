@@ -113,7 +113,7 @@ class TelegramBot
   end
 
   def send_ds chat_id, ds, aliases: {}, &block
-    text = "<pre>\n#{db_data ds, aliases: aliases, &block}\n</pre>"
+    text = "<pre>#{db_data ds, aliases: aliases, &block}</pre>"
     send_message SymMash.new(chat: {id: chat_id}), text, parse_mode: 'HTML'
   end
 
