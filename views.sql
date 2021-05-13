@@ -68,7 +68,7 @@ drop view if exists pools;
 create view pools as 
   select 
     pool,
-    round(avg(eth_reward_per_mh_per_day), 8) as eth_reward_per_mh_per_day,
+    round(avg(eth_reward_per_mh_per_day), 8) as 'ETH/MH/DAY',
     round(avg(hours), 2) as hours
   from last_readings
   where hours > 6

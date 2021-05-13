@@ -60,7 +60,8 @@ class TelegramBot
         .select(:pool, :read_at, :reported_hashrate.as(:MH), :balance)
         .where(wallet: $1)
         .order(Sequel.desc :read_at)
-        .limit(10)
+        .offset($2&.to_i)
+        .limit(20)
       send_ds msg.chat.id, ds
 
     when /^\/pool_last_readings (#{WRX})/
@@ -92,7 +93,7 @@ class TelegramBot
     msg.from.id == ADMIN_CHAT_ID
   end
 
-  def db_data ds, &block
+  def db_data ds, aliases: {}, &block
     data = ds.all
     return "no data returned" if data.blank?
     data = ds.map do |p|
@@ -100,16 +101,19 @@ class TelegramBot
       block.call p if block
       p
     end
-    headers = data.first.keys
-    Tabulo::Table.new(data, *headers).pack
+    Tabulo::Table.new data do |t|
+      ds.first.keys.each do |k|
+        t.add_column aliases[k] || k, &k
+      end
+    end.pack
   end
 
   def send_report chat_id = ENV['REPORT_CHAT_ID'].to_i
     send_ds chat_id, DB[:pools]
   end
 
-  def send_ds chat_id, ds, &block
-    text = "<pre>#{db_data ds, &block}</pre>"
+  def send_ds chat_id, ds, aliases: {}, &block
+    text = "<pre>\n#{db_data ds, aliases: aliases, &block}\n</pre>"
     send_message SymMash.new(chat: {id: chat_id}), text, parse_mode: 'HTML'
   end
 
