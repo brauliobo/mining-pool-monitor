@@ -3,7 +3,7 @@ create view periods as select
   p.pool,
   p.wallet,
   round((julianday(p2.read_at) - julianday(p.read_at)) * 24, 2) as hours,
-  round((julianday(p2.read_at) - julianday(p.read_at)) * 24 / 12) * 12 as period,
+  floor(mod((julianday(p2.read_at) - julianday(p.read_at)) * 24, 12)) * 12 as period,
   round((p.reported_hashrate + p2.reported_hashrate) / 2, 2) as hashrate,
   p2.balance - p.balance as reward,
   round(p.reported_hashrate, 2)  as first_hashrate,
@@ -32,7 +32,7 @@ group by pool, period;
 drop view if exists pools;
 create view pools as select
   pool,
-  round(avg(case when period = 24 then eth_mh_day end), 7) as `12h`,
+  round(avg(case when period = 12 then eth_mh_day end), 7) as `12h`,
   round(avg(case when period = 24 then eth_mh_day end), 7) as `24h`,
   round(avg(case when period = 48 then eth_mh_day end), 7) as `48h`,
   round(avg(case when period = 72 then eth_mh_day end), 7) as `72h`
