@@ -39,5 +39,5 @@ create view pools as select
   round(avg(case when period = 72 then eth_mh_day end), 7) as `72h`
 from rewards
 group by pool
-order by `72h` desc;
+order by `72h` desc, `48h` desc, `24h` desc;
 
