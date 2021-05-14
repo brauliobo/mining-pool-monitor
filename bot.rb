@@ -62,14 +62,14 @@ EOS
         .order(Sequel.desc :read_at)
         .offset($2&.to_i)
         .limit(20)
-      send_ds msg.chat.id, ds
+      send_ds msg, ds
 
     when /^\/pool_last_readings (\w+) ?(\w+|$)/
       ds = DB[:periods]
         .where(pool: $1)
         .where(period: $2.presence&.to_i || 24.0)
         .limit(6)
-      send_ds msg.chat.id, ds
+      send_ds msg, ds
 
     when /^\/monitor (\w+) (#{WRX})/i
       raise '/monitor: not implemented yet'
