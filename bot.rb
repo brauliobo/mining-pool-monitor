@@ -128,6 +128,8 @@ EOS
 /*#{e 'pool_last_readings'}* <pool> <period (12, 24, 48 or 72)>
 /*#{e 'wallet_readings'}* <wallet> <offset>
 /*monitor* <pool> <wallet>
+
+Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
 EOS
     send_message msg, help
   end
