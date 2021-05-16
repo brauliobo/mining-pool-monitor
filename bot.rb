@@ -22,6 +22,8 @@ class TelegramBot
           @eth.process if Time.now.min.in? [0,30]
           sleep 1.minute
         end
+      rescue => e
+        puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
       end
 
       puts "bot: started, listening"
