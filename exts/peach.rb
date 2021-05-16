@@ -8,7 +8,7 @@ module Enumerable
     ret       = each do |*args|
       pool.post do
         Thread.current.priority = priority if priority
-        block.call *args
+        block.call(*args)
       end
     end
 

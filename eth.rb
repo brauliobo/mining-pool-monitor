@@ -112,13 +112,14 @@ class Eth
     data = Mechanize.new.get url % params
     data = SymMash.new JSON.parse data.body
     data
-  rescue
-    retry
+  rescue => e
+    puts "error #{url}: #{e.message}"
   end
 
   def pool_read pool, wallet
     input = POOLS[pool].merge wallet: wallet
-    data  = instance_exec input, &input.process
+    data  = instance_exec input, &input.process rescue nil
+    return puts "#{pool}/#{wallet}: error while fetching data" unless data
     return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?
 
     data.wallet  = wallet
@@ -129,7 +130,7 @@ class Eth
   def pool_fetch pool
     wallets(pool).api_peach.map do |w|
       data  = pool_read pool, w
-      next unless data
+      next puts "#{pool}: no data for #{w}" unless data
       puts "#{pool}: #{data.to_h}"
       data
     end.compact
