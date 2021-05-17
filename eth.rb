@@ -51,9 +51,11 @@ class Eth
       api:     'https://www.viabtc.com/res/observer/home?access_key=%{w}&coin=ETH',
       process: -> i {
         data = get(i.api, w: i.wallet).data
+        hashrate  = data.hashrate_1day.to_f
+        hashrate *= 1000 if data.hashrate_1day.index 'G'
         SymMash.new(
           balance:  data.account_balance.to_f,
-          hashrate: data.hashrate_1day.to_f,
+          hashrate: hashrate,
         )
       },
     },
@@ -109,7 +111,8 @@ class Eth
   end
 
   def get url, params
-    data = Mechanize.new.get url % params
+    url  = url % params
+    data = Mechanize.new.get url
     data = SymMash.new JSON.parse data.body
     data
   rescue => e
