@@ -18,8 +18,11 @@ class TelegramBot
 
       Thread.new do
         loop do
-          send_report  if Time.now.min == 0
-          @eth.process if Time.now.min.in? [0,30]
+          if Time.now.min == 0
+            @eth.process
+            DB.refresh_view :periods_materialized
+            send_report
+          end
           sleep 1.minute
         end
       rescue => e
@@ -67,7 +70,7 @@ EOS
       send_ds msg, ds
 
     when /^\/pool_last_readings (\w+) ?(\w+|$)/
-      ds = DB[:periods]
+      ds = DB[:periods_materialized]
         .where(pool: $1)
         .where(period: $2.presence&.to_i || 24.0)
         .limit(4)
@@ -110,7 +113,8 @@ EOS
   end
 
   def send_report msg = SymMash.new(chat: {id: ENV['REPORT_CHAT_ID'].to_i})
-    suffix  = "Each period is measured with the average of ETH rewarded per MH normalized in a 24h reward per MH for comparison."
+    suffix  = "The scale is e-05 which is the ETH rewarded per MH normalized in a 24h period."
+    suffix += "\n6d and 9d periods are an average of multiple 3d periods"
     suffix += "\nIf you have a 100MH miner multiple it by 100."
     send_ds msg, DB[:pools], suffix: suffix
   end
