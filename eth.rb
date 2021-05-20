@@ -12,6 +12,17 @@ class Eth
         )
       }
     },
+    garimpool: {
+      url:      'https://garimpool.com.br/#/account/%{w}',
+      api:      'https://garimpool.com.br/api/accounts/%{w}',
+      process:  -> i {
+        data = get i.api, w: i.wallet
+        SymMash.new(
+          balance:  data.stats.balance / 1.0e9,
+          hashrate: data.hashrate / 1.0e6,
+        )
+      }
+    },
     flexpool: {
       url:      'https://flexpool.io/%{w}',
       balance:  'https://flexpool.io/api/v1/miner/%{w}/balance/',
