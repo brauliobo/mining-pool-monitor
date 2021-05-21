@@ -11,27 +11,41 @@ drop view if exists pools, rewards;
 drop materiaLIZED view periods_materialized;
 drop view if exists periods;
 create or replace view periods as
+with
+wallet_pairs as (
 select
+  row_number() over(partition by p.pool, p.wallet, floor((extract(epoch from p2.read_at - p.read_at) / 3600 / 24)), i.seq order by p.pool, p.wallet, p.read_at desc) as row,
   p.pool,
   p.wallet,
-  floor((extract(epoch from p2.read_at - p.read_at) / 3600 / 24)::numeric) * 24 as period,
   i.seq as iseq,
-  round((avg(extract(epoch from p2.read_at - p.read_at) / 3600)::numeric), 2) as hours,
-  round((avg((p.reported_hashrate + p2.reported_hashrate) / 2)::numeric), 2) as hashrate,
-  avg((24 / (extract(epoch from p2.read_at - p.read_at) / 3600))
-    * ((p2.balance - p.balance) / ((p.reported_hashrate + p2.reported_hashrate) / 2))) as eth_mh_day,
-  avg(p2.balance - p.balance) as reward,
-  avg(p.balance) as first_balance,
-  avg(p2.balance) as second_balance,
-  max(p.read_at) as first_read,
-  max(p2.read_at) as second_read
+  floor(extract(epoch from p2.read_at - p.read_at) / 3600 / 24) * 24 as period,
+  extract(epoch from p2.read_at - p.read_at) / 3600 as hours,
+  (p.reported_hashrate + p2.reported_hashrate) / 2 as hashrate,
+  p2.balance - p.balance as reward,
+  p.balance as first_balance,
+  p2.balance as second_balance,
+  p.read_at as first_read,
+  p2.read_at as second_read
 from wallets p
 join wallets p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
  and 5 > 100 * abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate
 join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
- and floor((extract(epoch from p2.read_at - p.read_at) / 3600 / 24)::numeric) * 24 = 24
-group by p.pool, p.wallet, period, iseq
-order by p.pool, p.wallet, period, iseq;
+ and floor(extract(epoch from p2.read_at - p.read_at) / 3600 / 24) * 24 = 24
+)
+select
+  pool,
+  wallet,
+  period,
+  iseq,
+  hours,
+  (24 / hours) * (reward / hashrate) as eth_mh_day,
+  reward,
+  first_balance,
+  second_balance,
+  first_read,
+  second_read
+from wallet_pairs
+where row = 1;
 
 create materiaLIZED view periods_materialized as select * from periods;
 
