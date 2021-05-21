@@ -37,13 +37,13 @@ select
   wallet,
   period,
   iseq,
-  hours,
-  (24 / hours) * (reward / hashrate) as eth_mh_day,
-  reward,
-  first_balance,
-  second_balance,
-  first_read,
-  second_read
+  round(hours::numeric, 2) as hours,
+  round((100000 * (24 / hours) * (reward / hashrate))::numeric, 2) as eth_mh_day,
+  round(reward::numeric, 5) as reward,
+  round(first_balance::numeric, 5) as "1st_balance",
+  round(second_balance::numeric, 5) as "2nd_balance",
+  to_char(first_read, 'MM/DD HH:MI') as "1st_read",
+  to_char(second_read, 'MM/DD HH:MI') as "2nd_read"
 from wallet_pairs
 where row = 1;
 
