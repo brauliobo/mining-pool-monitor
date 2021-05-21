@@ -76,7 +76,7 @@ EOS
         .limit(20)
       send_ds msg, ds
 
-    when /^\/pool_last_readings (\w+) ?(\w+|$)/
+    when /^\/pool_last_readings (\w+)/
       ds = DB[:wallets]
         .where(pool: $1)
         .order(Sequel.desc :read_at)
@@ -138,9 +138,9 @@ EOS
     help = <<-EOS
 /*report*
 /*read* <pool> <wallet>
-/*#{e 'pool_last_readings'}* <pool> <period (12, 24, 48 or 72)>
+/*#{e 'wallet_rewards'}* <wallet>
+/*#{e 'pool_last_readings'}* <pool>
 /*#{e 'wallet_readings'}* <wallet> <offset>
-/*monitor* <pool> <wallet>
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
 EOS
