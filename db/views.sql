@@ -42,8 +42,8 @@ select
   round(reward::numeric, 5) as reward,
   round(first_balance::numeric, 5) as "1st_balance",
   round(second_balance::numeric, 5) as "2nd_balance",
-  to_char(first_read, 'MM/DD HH:MI') as "1st_read",
-  to_char(second_read, 'MM/DD HH:MI') as "2nd_read"
+  to_char(first_read, 'MM/DD HH24:MI') as "1st_read",
+  to_char(second_read, 'MM/DD HH24:MI') as "2nd_read"
 from wallet_pairs
 where row = 1;
 
@@ -65,10 +65,10 @@ drop view if exists pools;
 create view pools as
 select
   pool,
-  round(avg(case when period = 24  then eth_mh_day::numeric*100000 end), 2) as "1d",
-  round(avg(case when period = 72  then eth_mh_day::numeric*100000 end), 2) as "3d",
-  round(avg(case when period = 144 then eth_mh_day::numeric*100000 end), 2) as "6d",
-  round(avg(case when period = 216 then eth_mh_day::numeric*100000 end), 2) as "9d"
+  round(avg(case when period = 24  then eth_mh_day::numeric end), 2) as "1d",
+  round(avg(case when period = 72  then eth_mh_day::numeric end), 2) as "3d",
+  round(avg(case when period = 144 then eth_mh_day::numeric end), 2) as "6d",
+  round(avg(case when period = 216 then eth_mh_day::numeric end), 2) as "9d"
 from rewards
 group by pool
 order by "9d" desc nulls last, "6d" desc nulls last, "3d" desc nulls last, "1d" desc nulls last;
