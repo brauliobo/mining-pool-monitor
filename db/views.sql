@@ -37,6 +37,7 @@ select
   wallet,
   period,
   iseq,
+  round(hashrate)::integer as MH,
   round(hours::numeric, 2) as hours,
   round((100000 * (24 / hours) * (reward / hashrate))::numeric, 2) as eth_mh_day,
   round(reward::numeric, 5) as reward,
