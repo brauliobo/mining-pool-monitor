@@ -59,11 +59,17 @@ EOS
     when /^\/report/
       send_report msg
 
+    when /^\/wallet_rewards (#{WRX})/
+      puts "/wallet_rewards: #{$1}"
+      ds = DB[:periods_materialized]
+        .where(Sequel.ilike :wallet, $1)
+      send_ds msg, ds
+
     when /^\/wallet_readings (#{WRX}) ?(\d*)/
       puts "/wallet_readings: #{$1} #{$2}"
       ds = DB[:wallets]
         .select(:pool, :read_at, :reported_hashrate.as(:MH), :balance)
-        .where(wallet: $1)
+        .where(Sequel.ilike :wallet, $1)
         .order(Sequel.desc :read_at)
         .offset($2&.to_i)
         .limit(20)

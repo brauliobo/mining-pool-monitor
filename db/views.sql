@@ -20,14 +20,11 @@ select
   round((avg((p.reported_hashrate + p2.reported_hashrate) / 2)::numeric), 2) as hashrate,
   avg((24 / (extract(epoch from p2.read_at - p.read_at) / 3600))
     * ((p2.balance - p.balance) / ((p.reported_hashrate + p2.reported_hashrate) / 2))) as eth_mh_day,
-  max(p.read_at::date) as interval_start,
-  max(p.read_at) as first_read,
-  max(p2.read_at) as second_read,
   max(p2.balance - p.balance) as reward,
-  max(round(p.reported_hashrate::numeric, 2)) as first_hashrate,
   max(p.balance) as first_balance,
-  max(round(p2.reported_hashrate::numeric, 2)) as second_hashrate,
-  max(p2.balance) as second_balance
+  max(p2.balance) as second_balance,
+  max(p.read_at) as first_read,
+  max(p2.read_at) as second_read
 from wallets p
 join wallets p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
  and 5 > 100 * abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate
