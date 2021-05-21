@@ -70,10 +70,9 @@ EOS
       send_ds msg, ds
 
     when /^\/pool_last_readings (\w+) ?(\w+|$)/
-      ds = DB[:periods_materialized]
+      ds = DB[:wallets]
         .where(pool: $1)
-        .where(period: $2.presence&.to_i || 24.0)
-        .limit(4)
+        .limit(5)
       send_ds msg, ds
 
     when /^\/monitor (\w+) (#{WRX})/i
