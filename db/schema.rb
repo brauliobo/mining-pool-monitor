@@ -15,7 +15,6 @@ Sequel.migration do
       Float :balance
       
       index [:pool, :wallet, :balance, :read_at, :reported_hashrate], :name=>:wallets_all_index
-      index [:coin, :pool, :wallet]
     end
   end
 end
