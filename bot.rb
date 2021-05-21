@@ -72,6 +72,7 @@ EOS
     when /^\/pool_last_readings (\w+) ?(\w+|$)/
       ds = DB[:wallets]
         .where(pool: $1)
+        .order(Sequel.desc :read_at)
         .limit(5)
       send_ds msg, ds
 
