@@ -9,6 +9,6 @@ end
 
 loop do
   Eth.new.process
-  sleep 30.minutes
+  sleep 60.minutes
 end
 

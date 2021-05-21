@@ -9,6 +9,8 @@ module Enumerable
       pool.post do
         Thread.current.priority = priority if priority
         block.call(*args)
+      rescue => e
+        puts "error: #{e.message}"
       end
     end
 

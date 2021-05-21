@@ -151,7 +151,6 @@ class Eth
   end
 
   def process
-    reference_time = Time.now
     POOLS.cpu_peach do |pool, opts|
       data = pool_fetch pool
       DB[:wallets].multi_insert(data.map do |d|
@@ -159,7 +158,6 @@ class Eth
           coin:              'eth',
           pool:              pool.to_s,
           wallet:            d.wallet,
-          reference_time:    reference_time,
           read_at:           d.read_at,
           reported_hashrate: d.hashrate,
           balance:           d.balance,
