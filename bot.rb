@@ -138,11 +138,13 @@ EOS
     help = <<-EOS
 /*report*
 /*read* <pool> <wallet>
+Commands for monitored wallets
 /*#{e 'wallet_rewards'}* <wallet>
 /*#{e 'pool_last_readings'}* <pool>
 /*#{e 'wallet_readings'}* <wallet> <offset>
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
+List of hourly monitored wallets at https://github.com/brauliobo/mining-pool-monitor/blob/master/.env
 EOS
     send_message msg, help
   end
