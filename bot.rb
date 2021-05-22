@@ -120,8 +120,8 @@ EOS
   end
 
   def send_report msg = SymMash.new(chat: {id: ENV['REPORT_CHAT_ID'].to_i})
-    suffix  = "The scale is e-05 which is the ETH rewarded per MH normalized in a 24h period."
-    suffix += "\nMultiple days periods are an average of sequential 1d periods"
+    suffix  = "The scale is e-05, ETH rewarded/MH/24h. TW means the count of tracked wallets."
+    suffix += "\nMultiple days periods are an average of sequential 1d periods."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
     send_ds msg, DB[:pools], suffix: suffix
   end
