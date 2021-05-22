@@ -14,7 +14,7 @@ create or replace view periods as
 with
 wallet_pairs as (
 select
-  row_number() over(partition by p.pool, p.wallet, floor((extract(epoch from p2.read_at - p.read_at) / 3600 / 24)), i.seq order by p.pool, p.wallet, p2.read_at desc) as row,
+  row_number() over(partition by p.pool, p.wallet, i.seq order by p.pool, p.wallet, i.seq, p2.read_at desc) as row,
   p.pool,
   p.wallet,
   i.seq as iseq,
