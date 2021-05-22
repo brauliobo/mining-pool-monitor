@@ -18,7 +18,7 @@ select
   p.pool,
   p.wallet,
   i.seq as iseq,
-  floor(extract(epoch from p2.read_at - p.read_at) / 3600 / 24) * 24 as period,
+  24 as period,
   extract(epoch from p2.read_at - p.read_at) / 3600 as hours,
   (p.reported_hashrate + p2.reported_hashrate) / 2 as hashrate,
   p2.balance - p.balance as reward,
