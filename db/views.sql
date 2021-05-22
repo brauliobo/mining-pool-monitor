@@ -65,7 +65,7 @@ order by pool, wallet, id.period;
 drop view if exists pools;
 create view pools as
 select
-  row_number() over(order by avg(case when period = 216 then eth_mh_day end) desc) || '. ' || pool as pool,
+  row_number() over(order by avg(case when period = 216 then eth_mh_day end) desc nulls last) || '. ' || pool as pool,
   round(avg(case when period = 24  then eth_mh_day::numeric end), 2) as "1d",
   round(avg(case when period = 72  then eth_mh_day::numeric end), 2) as "3d",
   round(avg(case when period = 144 then eth_mh_day::numeric end), 2) as "6d",
