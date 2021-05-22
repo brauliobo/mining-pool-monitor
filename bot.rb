@@ -85,7 +85,7 @@ EOS
       send_ds msg, ds
 
     when /^\/pool_readings (\w+) ?(\d*)/
-      puts "/wallet_readings: #{$1} #{$2}"
+      puts "/pool_readings: #{$1} #{$2}"
       ds = DB[:wallets]
         .where(pool: $1)
         .order(Sequel.desc :read_at)
