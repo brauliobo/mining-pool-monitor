@@ -9,14 +9,10 @@ order by start_date desc;
 
 drop view if exists pools, rewards;
 drop materiaLIZED view periods_materialized;
-drop view if exists periods;
-create or replace view periods as
-with
-wallet_pairs as (
+drop view if exists wallet_pairs, periods;
+
+create or replace view wallet_pairs as
 select
-  row_number() over(
-    partition by p.pool, p.wallet, i.seq
-    order by p.pool, p.wallet, i.seq, abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1), p2.read_at desc) as row,
   p.pool,
   p.wallet,
   i.seq as iseq,
@@ -32,7 +28,17 @@ from wallets p
 join wallets p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
  and 5 > 100 * abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate
 join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
- and round(extract(epoch from p2.read_at - p.read_at) / 3600 / 24) = 1
+ and round(extract(epoch from p2.read_at - p.read_at) / 3600 / 24) = 1;
+
+create or replace view periods as
+with
+ordered_wallet_pairs as (
+select
+  row_number() over(
+    partition by pool, wallet, iseq
+    order by pool, wallet, iseq, abs(hours / period - 1) asc, second_read desc) as row,
+  wp.*
+FROM wallet_pairs wp
 )
 select
   pool,
@@ -47,7 +53,7 @@ select
   round(second_balance::numeric, 5) as "2nd_balance",
   to_char(first_read, 'MM/DD HH24:MI') as "1st_read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd_read"
-from wallet_pairs
+from ordered_wallet_pairs
 where row = 1;
 
 create materiaLIZED view periods_materialized as select * from periods;
