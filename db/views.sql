@@ -80,7 +80,7 @@ select
   round(avg(case when period = 216 then eth_mh_day::numeric end), 2) as "9d"
 from rewards
 group by pool
-order by pool;
+order by avg(case when period = 216 then eth_mh_day end) desc nulls last;
 
 
 
