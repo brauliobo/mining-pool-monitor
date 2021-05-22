@@ -9,7 +9,7 @@ order by start_date desc;
 
 drop view if exists pools, rewards;
 drop materiaLIZED view periods_materialized;
-drop view if exists wallet_pairs, periods;
+drop view if exists ordered_wallet_pairs, wallet_pairs, periods;
 
 create or replace view wallet_pairs as
 select
@@ -26,20 +26,19 @@ select
   p2.read_at as second_read
 from wallets p
 join wallets p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
- and 5 > 100 * abs(p2.reported_hashrate - p.reported_hashrate)/p.reported_hashrate
+ and 5  > 100 * abs(p2.reported_hashrate/p.reported_hashrate - 1)
 join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
- and round(extract(epoch from p2.read_at - p.read_at) / 3600 / 24) = 1;
+ and 25 > 100 * abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1);
 
-create or replace view periods as
-with
-ordered_wallet_pairs as (
+CREATE OR replace VIEW ordered_wallet_pairs as
 select
   row_number() over(
     partition by pool, wallet, iseq
     order by pool, wallet, iseq, abs(hours / period - 1) asc, second_read desc) as row,
   wp.*
-FROM wallet_pairs wp
-)
+FROM wallet_pairs wp;
+
+create or replace view periods as
 select
   pool,
   wallet,
@@ -62,15 +61,15 @@ create or replace view rewards as
 select
   p.pool,
   wallet,
-  id.period as period,
+  idf.period as period,
   avg(hours * id.seq) filter(where id.period <= p.period * p.iseq) as hours,
   avg(eth_mh_day)     filter(where id.period <= p.period * p.iseq) as eth_mh_day
 from periods_materialized p
-join intervals_defs id on id.period <= p.period * p.iseq
-group by pool, wallet, id.period
-order by p.pool, wallet, id.period;
+join intervals_defs id on id.period <= p.period * p.iseq  --period generation
+join intervals_defs idf on idf.period = p.period * p.iseq --period selection
+group by p.pool, p.wallet, idf.period
+order by p.pool, p.wallet, idf.period;
 
-drop view if exists pools;
 create view pools as
 select
   row_number() over(order by avg(case when period = 216 then eth_mh_day end) desc nulls last) || '. ' || pool as pool,

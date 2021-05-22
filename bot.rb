@@ -66,20 +66,30 @@ EOS
         .where(Sequel.ilike :wallet, $1)
       send_ds msg, ds
 
+    when /^\/pool_rewards (\w+) ?(\d*)/
+      puts "/pool_rewards: #{$1} #{$2}"
+      ds = DB[:rewards]
+        .select(*DB[:rewards].columns.excluding(:pool)) # make it shorter
+        .where(pool: $1)
+        .where(period: $2.presence&.to_i || 24)
+      send_ds msg, ds
+
     when /^\/wallet_readings (#{WRX}) ?(\d*)/
       puts "/wallet_readings: #{$1} #{$2}"
       ds = DB[:wallets]
         .select(:pool, :read_at, :reported_hashrate.as(:MH), :balance)
         .where(Sequel.ilike :wallet, $1)
         .order(Sequel.desc :read_at)
-        .offset($2&.to_i)
+        .offset($2.presence&.to_i)
         .limit(20)
       send_ds msg, ds
 
-    when /^\/pool_last_readings (\w+)/
+    when /^\/pool_readings (\w+) ?(\d*)/
+      puts "/wallet_readings: #{$1} #{$2}"
       ds = DB[:wallets]
         .where(pool: $1)
         .order(Sequel.desc :read_at)
+        .offset($2.presence&.to_i)
         .limit(5)
       send_ds msg, ds
 
@@ -140,8 +150,9 @@ EOS
 /*read* <pool> <wallet>
 Commands for monitored wallets
 /*#{e 'wallet_rewards'}* <wallet>
-/*#{e 'pool_last_readings'}* <pool>
 /*#{e 'wallet_readings'}* <wallet> <offset>
+/*#{e 'pool_rewards'}* <pool> <period=(24|72|144|216)>
+/*#{e 'pool_readings'}* <pool> <offset>
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
 List of hourly monitored wallets at https://github.com/brauliobo/mining-pool-monitor/blob/master/.env
