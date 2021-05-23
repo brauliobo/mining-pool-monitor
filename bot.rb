@@ -47,7 +47,8 @@ class TelegramBot
     when /^\/help/
       send_help msg
 
-    when /^\/read|track (\w+) (#{WRX})/
+    when /^\/read (\w+) (#{WRX})/,
+         /^\/track (\w+) (#{WRX})/
       puts "/read #{$1} #{$2}"
       data    = @eth.pool_read $1, $2
       params  = {coin: 'eth', pool: $1, wallet: $2}
