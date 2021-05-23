@@ -139,7 +139,7 @@ class Eth
     data.read_at = Time.now
 
     hashrate = data&.hashrate || 0
-    Tracked.update_hashrate 'eth', pool, wallet, hashrate
+    Tracked.track data
 
     return puts "#{pool}/#{wallet}: error while fetching data" unless data
     return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?

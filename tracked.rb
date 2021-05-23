@@ -1,19 +1,18 @@
 class Tracked
 
   def self.track data
-    return unless data.hashrate > 0
-    DB[:wallets_tracked].insert_conflict.insert(
+    update = {hashrate_last: :excluded__hashrate_last, last_read_at: :excluded__last_read_at}
+    record = {
       coin:          data.coin,
       pool:          data.pool,
       wallet:        data.wallet,
       hashrate_last: data.hashrate,
-    )
-  end
+      last_read_at:  Time.now,
+    }
 
-  def self.update_hashrate coin, pool, wallet, hashrate
     DB[:wallets_tracked]
-      .where(coin: coin, pool: pool.to_s, wallet: wallet)
-      .update(hashrate_last: hashrate, last_read_at: Time.now)
+      .insert_conflict(constraint: :wallets_tracked_unique_constraint, update: update)
+      .insert record
   end
 
 end
