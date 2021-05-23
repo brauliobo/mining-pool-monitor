@@ -8,7 +8,7 @@ class Tracked
       wallet:        data.wallet,
       hashrate_last: data.hashrate,
     )
-    record.last_read_at = Time.now if data.hashrate > 0
+    record.last_read_at = data.read_at || Time.now if data.hashrate > 0
 
     DB[:wallets_tracked]
       .insert_conflict(constraint: :wallets_tracked_unique_constraint, update: update)
