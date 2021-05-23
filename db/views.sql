@@ -9,7 +9,7 @@ order by start_date desc;
 
 drop view if exists pools, rewards;
 drop materiaLIZED view periods_materialized;
-drop view if exists ordered_wallet_pairs, filtered_wallet_pairs, wallet_pairs, periods;
+drop view if exists filtered_wallet_pairs, wallet_pairs, periods;
 
 create or replace view wallet_pairs as
 select
