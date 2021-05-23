@@ -69,7 +69,7 @@ EOS
     when /^\/wallet_rewards (#{WRX})/
       puts "/wallet_rewards: #{$1}"
       ds = DB[:periods_materialized]
-        .select(*DB[:periods_materialized].columns.excluding(:pool, :wallet)) # make it shorter
+        .select(*DB[:periods_materialized].columns.excluding(:pool, :wallet, :period)) # make it shorter
         .where(Sequel.ilike :wallet, $1)
       send_ds msg, ds
 
