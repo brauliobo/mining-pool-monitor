@@ -47,6 +47,15 @@ class TelegramBot
     when /^\/help/
       send_help msg
 
+    when /^\/pool_wallets (\w+)/
+      puts "/wallet_rewards: #{$1}"
+      ds = DB[:wallets_tracked]
+        .select(*DB[:wallets_tracked].columns.excluding(:coin, :pool, :hashrate_avg_24h, :started_at)) # make it shorter
+        .where(pool: $1)
+        .order(Sequel.desc :last_read_at, nulls: :last)
+        .limit(20)
+      send_ds msg, ds
+
     when /^\/read (\w+) (#{WRX})/,
          /^\/track (\w+) (#{WRX})/
       puts "/read #{$1} #{$2}"
