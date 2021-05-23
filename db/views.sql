@@ -48,10 +48,10 @@ select
   round(hours::numeric, 2) as hours,
   round((100000 * (24 / hours) * (reward / hashrate))::numeric, 2) as eth_mh_day,
   round(reward::numeric, 5) as reward,
-  round(first_balance::numeric, 5) as "1st_balance",
-  round(second_balance::numeric, 5) as "2nd_balance",
-  to_char(first_read, 'MM/DD HH24:MI') as "1st_read",
-  to_char(second_read, 'MM/DD HH24:MI') as "2nd_read"
+  round(first_balance::numeric, 5) as "1st balance",
+  round(second_balance::numeric, 5) as "2nd balance",
+  to_char(first_read, 'MM/DD HH24:MI') as "1st read",
+  to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
 from ordered_wallet_pairs
 where row = 1;
 
