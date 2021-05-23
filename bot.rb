@@ -47,13 +47,14 @@ class TelegramBot
     when /^\/help/
       send_help msg
 
-    when /^\/pool_wallets (\w+)/
+    when /^\/pool_wallets (\w+) ?(\d*)/
       puts "/wallet_rewards: #{$1}"
       ds = DB[:wallets_tracked]
         .select(*DB[:wallets_tracked].columns.excluding(:coin, :pool, :hashrate_avg_24h, :started_at)) # make it shorter
         .where(pool: $1)
         .order(Sequel.desc :last_read_at, nulls: :last)
         .limit(10)
+        .offset($2.presence&.to_i)
       send_ds msg, ds
 
     when /^\/read (\w+) (#{WRX})/,
@@ -165,7 +166,7 @@ EOS
 /*report*
 /*read* <pool> <wallet>
 /*track* <pool> <wallet>
-/*#{e 'pool_wallets'}* <pool> - List of tracked wallets
+/*#{e 'pool_wallets'}* <pool> <offset> - List of tracked wallets
 Commands for monitored wallets (first use /track above):
 /*#{e 'wallet_rewards'}* <wallet>
 /*#{e 'wallet_readings'}* <wallet> <offset>
