@@ -3,6 +3,8 @@
 require_relative '../monitor'
 
 Eth::POOLS.each do |pool, opts|
+  next if ENV["WALLETS_#{pool}"].blank?
+
   wallets = ENV["WALLETS_#{pool}"].squish.split
   wallets.map! do |wallet|
     {

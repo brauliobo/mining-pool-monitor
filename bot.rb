@@ -47,14 +47,17 @@ class TelegramBot
     when /^\/help/
       send_help msg
 
-    when /^\/read (\w+) (#{WRX})/
+    when /^\/read|track (\w+) (#{WRX})/
       puts "/read #{$1} #{$2}"
       data = @eth.pool_read $1, $2
+      data.merge! coin: 'eth', pool: $1, wallet: $2
       send_message msg, <<-EOS
 #{Eth.url $1, $2}
 *balance*: #{data.balance} ETH
 *hashrate*: #{data.hashrate} MH/s
 EOS
+
+    Tracked.track data
 
     when /^\/report/
       send_report msg
@@ -76,7 +79,7 @@ EOS
 
     when /^\/wallet_readings (#{WRX}) ?(\d*)/
       puts "/wallet_readings: #{$1} #{$2}"
-      ds = DB[:wallets]
+      ds = DB[:wallet_reads]
         .select(:pool, :read_at, :reported_hashrate.as(:MH), :balance)
         .where(Sequel.ilike :wallet, $1)
         .order(Sequel.desc :read_at)
@@ -86,7 +89,7 @@ EOS
 
     when /^\/pool_readings (\w+) ?(\d*)/
       puts "/pool_readings: #{$1} #{$2}"
-      ds = DB[:wallets]
+      ds = DB[:wallet_reads]
         .where(pool: $1)
         .order(Sequel.desc :read_at)
         .offset($2.presence&.to_i)
