@@ -53,7 +53,7 @@ class TelegramBot
         .select(*DB[:wallets_tracked].columns.excluding(:coin, :pool, :hashrate_avg_24h, :started_at)) # make it shorter
         .where(pool: $1)
         .order(Sequel.desc :last_read_at, nulls: :last)
-        .limit(20)
+        .limit(10)
       send_ds msg, ds
 
     when /^\/read (\w+) (#{WRX})/,
@@ -165,6 +165,7 @@ EOS
 /*report*
 /*read* <pool> <wallet>
 /*track* <pool> <wallet>
+/*#{e 'pool_wallets'}* <pool> - List of tracked wallets
 Commands for monitored wallets (first use /track above):
 /*#{e 'wallet_rewards'}* <wallet>
 /*#{e 'wallet_readings'}* <wallet> <offset>
