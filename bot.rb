@@ -156,6 +156,7 @@ EOS
     help = <<-EOS
 /*report*
 /*read* <pool> <wallet>
+/*track* <pool> <wallet>
 Commands for monitored wallets
 /*#{e 'wallet_rewards'}* <wallet>
 /*#{e 'wallet_readings'}* <wallet> <offset>
