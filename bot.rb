@@ -156,14 +156,13 @@ EOS
 /*report*
 /*read* <pool> <wallet>
 /*track* <pool> <wallet>
-Commands for monitored wallets
+Commands for monitored wallets (first use /track above):
 /*#{e 'wallet_rewards'}* <wallet>
 /*#{e 'wallet_readings'}* <wallet> <offset>
 /*#{e 'pool_rewards'}* <pool> <period=(24|72|144|216)>
 /*#{e 'pool_readings'}* <pool> <offset>
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
-List of hourly monitored wallets at https://github.com/brauliobo/mining-pool-monitor/blob/master/.env
 EOS
     send_message msg, help
   end
