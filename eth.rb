@@ -133,11 +133,17 @@ class Eth
   def pool_read pool, wallet
     input = POOLS[pool].merge wallet: wallet
     data  = instance_exec input, &input.process rescue nil
+    data.coin    = 'eth'
+    data.pool    = pool.to_s
+    data.wallet  = wallet
+    data.read_at = Time.now
+
+    hashrate = data&.hashrate || 0
+    Tracked.update_hashrate 'eth', pool, wallet, hashrate
+
     return puts "#{pool}/#{wallet}: error while fetching data" unless data
     return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?
 
-    data.wallet  = wallet
-    data.read_at = Time.now
     data
   end
 
@@ -146,7 +152,6 @@ class Eth
       data  = pool_read pool, w
       next puts "#{pool}: no data for #{w}" unless data
       puts "#{pool}: #{data.to_h}"
-      Tracked.update_hashrate pool, w
 
       data
 
@@ -174,6 +179,7 @@ class Eth
   def wallets pool
     DB[:wallets_tracked]
       .where(coin: 'eth', pool: pool.to_s)
+      .where{ (hashrate_last > 0) | (last_read_at >= 24.hours.ago) }
       .select_map(:wallet)
   end
 

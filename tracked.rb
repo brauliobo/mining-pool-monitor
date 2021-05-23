@@ -10,7 +10,10 @@ class Tracked
     )
   end
 
-  def self.update_hashrate pool, wallet
+  def self.update_hashrate coin, pool, wallet, hashrate
+    DB[:wallets_tracked]
+      .where(coin: coin, pool: pool.to_s, wallet: wallet)
+      .update(hashrate_last: hashrate, last_read_at: Time.now)
   end
 
 end
