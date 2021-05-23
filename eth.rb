@@ -133,12 +133,12 @@ class Eth
   def pool_read pool, wallet
     input = POOLS[pool].merge wallet: wallet
     data  = instance_exec input, &input.process rescue nil
-    data.coin    = 'eth'
-    data.pool    = pool.to_s
-    data.wallet  = wallet
-    data.read_at = Time.now
+    data.coin       = 'eth'
+    data.pool       = pool.to_s
+    data.wallet     = wallet
+    data.read_at    = Time.now
+    data.hashrate ||= 0
 
-    hashrate = data&.hashrate || 0
     Tracked.track data
 
     return puts "#{pool}/#{wallet}: error while fetching data" unless data
@@ -161,7 +161,7 @@ class Eth
   def process
     POOLS.cpu_peach do |pool, opts|
       data = pool_fetch pool
-      next unless ENV['DRY']
+      next if ENV['DRY']
       data.map! do |d|
         {
           coin:              'eth',
