@@ -21,7 +21,7 @@ class TelegramBot
           if Time.now.min == 0
             @eth.process
             DB.refresh_view :periods_materialized
-            send_report
+            send_report SymMash.new chat: {id: ENV['REPORT_CHAT_ID'].to_i}
           end
           sleep 1.minute
         end
@@ -73,8 +73,8 @@ EOS
 
       Tracked.track data rescue nil
 
-    when /^\/report/
-      send_report msg
+    when /^\/report ?(\w*)/
+      send_report msg, $1.presence
 
     when /^\/wallet_rewards (#{WRX})/
       puts "/wallet_rewards: #{$1}"
@@ -146,11 +146,13 @@ EOS
     end.pack
   end
 
-  def send_report msg = SymMash.new(chat: {id: ENV['REPORT_CHAT_ID'].to_i})
+  def send_report msg, order
     suffix  = "The scale is e-05, ETH rewarded/MH/24h. TW means the count of tracked wallets."
     suffix += "\nMultiple days periods are an average of sequential 1d periods."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
-    send_ds msg, DB[:pools], suffix: suffix
+    ds = DB[:pools]
+    ds = ds.order Sequel.desc order.to_sym if order
+    send_ds msg, ds, suffix: suffix
   end
 
   def send_ds msg, ds, prefix: nil, suffix: nil, **params, &block
