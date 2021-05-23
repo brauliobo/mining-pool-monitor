@@ -40,6 +40,8 @@ class Eth
       process: -> i {
         w = i.wallet.downcase.gsub(/^0x/, '')
         data = get(i.api, w: w).data
+        # ignore bad hashrates
+        return if data.currentStatistics.currentHashrate / data.currentStatistics.reportedHashrate > 2
         SymMash.new(
           balance:  data.currentStatistics.unpaid / 1.0e18,
           hashrate: data.currentStatistics.reportedHashrate / 1.0e6,
@@ -132,7 +134,9 @@ class Eth
 
   def pool_read pool, wallet
     input = POOLS[pool].merge wallet: wallet
-    data  = instance_exec input, &input.process rescue nil
+    data  = instance_exec input, &input.process rescue SymMash.new
+    return puts "#{pool}/#{wallet}: error while fetching data" unless data
+
     data.coin       = 'eth'
     data.pool       = pool.to_s
     data.wallet     = wallet
@@ -141,7 +145,6 @@ class Eth
 
     Tracked.track data
 
-    return puts "#{pool}/#{wallet}: error while fetching data" unless data
     return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?
 
     data

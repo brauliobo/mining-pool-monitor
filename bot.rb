@@ -51,17 +51,17 @@ class TelegramBot
          /^\/track (\w+) (#{WRX})/
       puts "/read #{$1} #{$2}"
       data    = @eth.pool_read $1, $2
-      tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first
+      tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
 
       send_message msg, <<-EOS
 #{Eth.url $1, $2}
-*balance*: #{data.balance} ETH
-*hashrate*: #{data.hashrate} MH/s
+*balance*: #{data&.balance} ETH
+*hashrate*: #{data&.hashrate} MH/s
 *tracking since*: #{tracked&.started_at || Time.now}
 *last read at*: #{tracked&.last_read_at}
 EOS
 
-    Tracked.track data
+      Tracked.track data rescue nil
 
     when /^\/report/
       send_report msg
