@@ -82,7 +82,7 @@ CREATE VIEW public.wallet_pairs AS
     p2.read_at AS second_read
    FROM ((public.wallet_reads p
      JOIN public.wallet_reads p2 ON (((p2.pool = p.pool) AND (p2.wallet = p.wallet) AND (p2.balance > p.balance) AND ((5)::double precision > ((100)::double precision * abs(((p2.reported_hashrate / p.reported_hashrate) - (1)::double precision)))))))
-     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND ((25)::double precision > ((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision)))))));
+     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND ((75)::double precision > ((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision)))))));
 
 
 ALTER TABLE public.wallet_pairs OWNER TO braulio;
@@ -226,11 +226,20 @@ CREATE TABLE public.wallets_tracked (
     wallet text,
     hashrate_last double precision,
     hashrate_avg_24h double precision,
-    started_at timestamp without time zone DEFAULT now()
+    started_at timestamp without time zone DEFAULT now(),
+    last_read_at timestamp without time zone
 );
 
 
 ALTER TABLE public.wallets_tracked OWNER TO braulio;
+
+--
+-- Name: wallets_tracked wallets_tracked_unique_constraint; Type: CONSTRAINT; Schema: public; Owner: braulio
+--
+
+ALTER TABLE ONLY public.wallets_tracked
+    ADD CONSTRAINT wallets_tracked_unique_constraint UNIQUE (coin, pool, wallet);
+
 
 --
 -- Name: wallets_all_index; Type: INDEX; Schema: public; Owner: braulio
@@ -244,13 +253,6 @@ CREATE INDEX wallets_all_index ON public.wallet_reads USING btree (pool, wallet,
 --
 
 CREATE INDEX wallets_tracked_all_index ON public.wallets_tracked USING btree (coin, pool, wallet, hashrate_last, hashrate_avg_24h);
-
-
---
--- Name: wallets_tracked_unique_index; Type: INDEX; Schema: public; Owner: braulio
---
-
-CREATE UNIQUE INDEX wallets_tracked_unique_index ON public.wallets_tracked USING btree (coin, pool, wallet);
 
 
 --

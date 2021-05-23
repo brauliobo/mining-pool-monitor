@@ -24,9 +24,10 @@ Sequel.migration do
       Float :hashrate_last
       Float :hashrate_avg_24h
       DateTime :started_at, :default=>Sequel::CURRENT_TIMESTAMP
+      DateTime :last_read_at
       
       index [:coin, :pool, :wallet, :hashrate_last, :hashrate_avg_24h], :name=>:wallets_tracked_all_index
-      index [:coin, :pool, :wallet], :name=>:wallets_tracked_unique_index, :unique=>true
+      index [:coin, :pool, :wallet], :name=>:wallets_tracked_unique_constraint, :unique=>true
     end
   end
 end
