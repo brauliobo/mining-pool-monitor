@@ -23,6 +23,7 @@ Sequel.migration do
       String :wallet, :text=>true
       Float :hashrate_last
       Float :hashrate_avg_24h
+      DateTime :started_at, :default=>Sequel::CURRENT_TIMESTAMP
       
       index [:coin, :pool, :wallet, :hashrate_last, :hashrate_avg_24h], :name=>:wallets_tracked_all_index
       index [:coin, :pool, :wallet], :name=>:wallets_tracked_unique_index, :unique=>true

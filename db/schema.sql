@@ -225,7 +225,8 @@ CREATE TABLE public.wallets_tracked (
     pool text,
     wallet text,
     hashrate_last double precision,
-    hashrate_avg_24h double precision
+    hashrate_avg_24h double precision,
+    started_at timestamp without time zone DEFAULT now()
 );
 
 

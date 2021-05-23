@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require_relative '../monitor'
+
+File.write 'db/schema.rb',  `sequel -d postgres://localhost/mining_pools`
+File.write 'db/schema.sql', `pg_dump --schema-only mining_pools`
+File.write 'db/dump.sql',   `pg_dump mining_pools`
+
