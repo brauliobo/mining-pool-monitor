@@ -6,7 +6,7 @@ Sequel.migration do
       Integer :seq
     end
     
-    create_table(:wallets, :ignore_index_errors=>true) do
+    create_table(:wallet_reads, :ignore_index_errors=>true) do
       String :coin, :text=>true
       String :pool, :text=>true
       String :wallet, :text=>true
@@ -15,6 +15,17 @@ Sequel.migration do
       Float :balance
       
       index [:pool, :wallet, :balance, :read_at, :reported_hashrate], :name=>:wallets_all_index
+    end
+    
+    create_table(:wallets_tracked, :ignore_index_errors=>true) do
+      String :coin, :text=>true
+      String :pool, :text=>true
+      String :wallet, :text=>true
+      Float :hashrate_last
+      Float :hashrate_avg_24h
+      
+      index [:coin, :pool, :wallet, :hashrate_last, :hashrate_avg_24h], :name=>:wallets_tracked_all_index
+      index [:coin, :pool, :wallet], :name=>:wallets_tracked_unique_index, :unique=>true
     end
   end
 end

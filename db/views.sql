@@ -24,8 +24,8 @@ select
   p2.balance as second_balance,
   p.read_at as first_read,
   p2.read_at as second_read
-from wallets p
-join wallets p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
+from wallet_reads p
+join wallet_reads p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
  and 5  > 100 * abs(p2.reported_hashrate/p.reported_hashrate - 1)
 join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
  and 25 > 100 * abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1);

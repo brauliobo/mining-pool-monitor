@@ -146,14 +146,18 @@ class Eth
       data  = pool_read pool, w
       next puts "#{pool}: no data for #{w}" unless data
       puts "#{pool}: #{data.to_h}"
+      Tracked.update_hashrate pool, w
+
       data
+
     end.compact
   end
 
   def process
     POOLS.cpu_peach do |pool, opts|
       data = pool_fetch pool
-      DB[:wallets].multi_insert(data.map do |d|
+      next unless ENV['DRY']
+      data.map! do |d|
         {
           coin:              'eth',
           pool:              pool.to_s,
@@ -162,12 +166,15 @@ class Eth
           reported_hashrate: d.hashrate,
           balance:           d.balance,
         }
-      end) unless ENV['DRY']
+      end
+      DB[:wallet_reads].multi_insert data
     end
   end
 
   def wallets pool
-    ENV["WALLETS_#{pool}"].squish.split
+    DB[:wallets_tracked]
+      .where(coin: 'eth', pool: pool.to_s)
+      .select_map(:wallet)
   end
 
 end

@@ -11,4 +11,5 @@ require_relative 'exts/peach'
 require_relative 'db'
 require_relative 'eth'
 require_relative 'bot'
+require_relative 'tracked'
 

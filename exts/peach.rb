@@ -3,6 +3,9 @@ module Enumerable
   def peach threads: nil, priority: nil, wait: true, &block
     block   ||= -> *args {}
     threads ||= (ENV['THREADS'] || '10').to_i
+
+    return each(&block) if threads == 1
+
     pool      = Concurrent::FixedThreadPool.new threads
     # catch_each can't be used as catchblock needs to be used inside pool.post
     ret       = each do |*args|
