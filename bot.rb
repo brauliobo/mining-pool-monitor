@@ -150,6 +150,7 @@ EOS
     suffix  = "The scale is e-05, ETH rewarded/MH/24h. TW means the count of tracked wallets."
     suffix += "\nMultiple days periods are an average of sequential 1d periods."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
+    suffix += "\nData is collected <b>hourly</b> and a minimum of 12 hours of reads is required for 1d period usage."
     ds = DB[:pools]
     ds = ds.order Sequel.desc order.to_sym if order
     send_ds msg, ds, suffix: suffix
