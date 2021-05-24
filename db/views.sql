@@ -26,7 +26,6 @@ select
   p2.read_at as second_read
 from wallet_reads p
 join wallet_reads p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
- and 5  > 100 * abs(p2.reported_hashrate/p.reported_hashrate - 1)
 join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
  and 75 > 100 * abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1);
 
@@ -42,7 +41,7 @@ FROM (
     wp.*
   from wallet_pairs wp
 ) wp
-JOIN wallet_reads wr ON wp.pool = wr.pool AND wp.wallet = wr.wallet 
+JOIN wallet_reads wr ON wp.pool = wr.pool AND wp.wallet = wr.wallet
 where wp.row = 1;
 
 create or replace view periods as
@@ -59,7 +58,8 @@ select
   round(second_balance::numeric, 5) as "2nd balance",
   to_char(first_read, 'MM/DD HH24:MI') as "1st read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
-from filtered_wallet_pairs;
+from filtered_wallet_pairs
+WHERE 5 > 100 * abs(hashrate/avg_hashrate - 1);
 
 create materiaLIZED view periods_materialized as select * from periods;
 
