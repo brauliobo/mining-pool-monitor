@@ -1,11 +1,13 @@
 require 'telegram/bot'
 require 'tabulo'
 
+require_relative 'bot/commands'
+
 class TelegramBot
 
   ADMIN_CHAT_ID = ENV['ADMIN_CHAT_ID'].to_i
 
-  WRX = '0x\h+'
+  include Commands
 
   def initialize token
     @eth   = Eth.new
@@ -41,86 +43,20 @@ class TelegramBot
   end
 
   def react msg
-    case text = msg.text
-    when /^\/start/
-      send_help msg
-    when /^\/help/
-      send_help msg
-
-    when /^\/pool_wallets (\w+) ?(\d*)/
-      puts "/wallet_rewards: #{$1}"
-      ds = DB[:wallets_tracked]
-        .select(*DB[:wallets_tracked].columns.excluding(:coin, :pool, :hashrate_avg_24h, :started_at)) # make it shorter
-        .where(pool: $1)
-        .order(Sequel.desc :last_read_at, nulls: :last)
-        .limit(10)
-        .offset($2.presence&.to_i)
-      send_ds msg, ds
-
-    when /^\/read (\w+) (#{WRX})/,
-         /^\/track (\w+) (#{WRX})/
-      puts "/read #{$1} #{$2}"
-      data    = @eth.pool_read $1, $2
-      tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
-
-      send_message msg, <<-EOS
-#{Eth.url $1, $2}
-*balance*: #{data&.balance} ETH
-*hashrate*: #{data&.hashrate} MH/s
-*tracking since*: #{tracked&.started_at || Time.now}
-*last read at*: #{tracked&.last_read_at}
-EOS
-
-      Tracked.track data rescue nil
-
-    when /^\/report ?(\w*)/
-      send_report msg, $1.presence
-
-    when /^\/wallet_rewards (#{WRX})/
-      puts "/wallet_rewards: #{$1}"
-      ds = DB[:periods_materialized]
-        .select(*DB[:periods_materialized].columns.excluding(:pool, :wallet, :period)) # make it shorter
-        .where(Sequel.ilike :wallet, $1)
-      send_ds msg, ds
-
-    when /^\/pool_rewards (\w+) ?(\d*)/
-      puts "/pool_rewards: #{$1} #{$2}"
-      ds = DB[:rewards]
-        .select(*DB[:rewards].columns.excluding(:pool)) # make it shorter
-        .where(pool: $1)
-        .where(period: $2.presence&.to_i || 24)
-      send_ds msg, ds
-
-    when /^\/wallet_readings (#{WRX}) ?(\d*)/
-      puts "/wallet_readings: #{$1} #{$2}"
-      ds = DB[:wallet_reads]
-        .select(:pool, :read_at, :reported_hashrate.as(:MH), :balance)
-        .where(Sequel.ilike :wallet, $1)
-        .order(Sequel.desc :read_at)
-        .offset($2.presence&.to_i)
-        .limit(20)
-      send_ds msg, ds
-
-    when /^\/pool_readings (\w+) ?(\d*)/
-      puts "/pool_readings: #{$1} #{$2}"
-      ds = DB[:wallet_reads]
-        .where(pool: $1)
-        .order(Sequel.desc :read_at)
-        .offset($2.presence&.to_i)
-        .limit(5)
-      send_ds msg, ds
-
-    when /^\/monitor (\w+) (#{WRX})/i
-      raise '/monitor: not implemented yet'
-
-    when /echo/
-      send_message msg, msg.inspect
-    when /exit/
-      return unless from_admin? msg
-      @exit = true
+    text = msg.text
+    cmd,args = text.match(/^\/(\w+)\s*(.*)/).captures
+    return unless cmd
+    return unless cmd_def = CMD_LIST[cmd.to_sym]
+    if cmd_def.args
+      args = cmd_def.args.match(args)
+      raise ArgumentError unless args
+      send "cmd_#{cmd}", msg, *args.captures.map(&:presence)
     else
-      puts "ignoring message: #{text}"
+      send "cmd_#{cmd}", msg
     end
+
+  rescue ArgumentError
+    send_message msg, "Incorrect format, usage is:\n#{help_cmd cmd}"
   rescue => e
     send_message msg, "error: #{e e.message}"
     STDERR.puts "#{e.message}: #{e.backtrace.join "\n"}"
@@ -182,17 +118,19 @@ EOS
     send_message msg, text, parse_mode: 'HTML'
   end
 
+  def help_cmd cmd
+    help = CMD_LIST[cmd].help
+    return unless help
+    help = help.call if help.is_a? Proc
+    "*/#{e cmd.to_s}* #{help}"
+  end
+
   def send_help msg
+    non_monitor = %i[read track]
     help = <<-EOS
-/*report* <sort column>
-/*read* <pool> <wallet>
-/*track* <pool> <wallet>
-/*#{e 'pool_wallets'}* <pool> <offset> - List of tracked wallets
+#{non_monitor.map{ |c| help_cmd c }.join("\n")}
 Commands for monitored wallets (first use /track above):
-/*#{e 'wallet_rewards'}* <wallet>
-/*#{e 'wallet_readings'}* <wallet> <offset>
-/*#{e 'pool_rewards'}* <pool> <period=(#{DB[:intervals_defs].select_map(:period).join('|')})>
-/*#{e 'pool_readings'}* <pool> <offset>
+#{CMD_LIST.keys.excluding(*non_monitor).map{ |c| help_cmd c }.compact.join("\n")}
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
 EOS
