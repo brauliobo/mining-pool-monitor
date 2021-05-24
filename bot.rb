@@ -132,7 +132,7 @@ EOS
   end
 
   def db_data ds, aliases: {}, &block
-    data = ds.all
+    data = ds.to_a
     return "no data returned" if data.blank?
     data = ds.map do |p|
       p = SymMash.new p
@@ -151,9 +151,27 @@ EOS
     suffix += "\nMultiple days periods are an average of sequential 1d periods."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
     suffix += "\nData is collected <b>hourly</b> and a minimum of 12 hours of reads is required for 1d period usage."
-    ds = DB[:pools]
-    ds = ds.order Sequel.desc order.to_sym if order
+    ds = report_data order || '9d'
     send_ds msg, ds, suffix: suffix
+  end
+
+  def report_data order = nil
+    ds = DB[:rewards]
+      .group(:pool)
+      .select(:pool)
+      .select_append{ count(distinct wallet).as :TW }
+    DB[:intervals_defs].map{ |id| SymMash.new id }.each do |id|
+      ds = ds.select_append{ round(avg(Sequel.case([[{period: id.period}, :eth_mh_day]], nil)), 2).as id.label }
+    end
+
+    data = ds.all.map{ |d| SymMash.new d }
+    oc   = order.to_sym if order
+    data = data.sort{ |a,b| if a[oc] && b[oc] then b[oc] <=> a[oc] elsif a[oc] then -1 else 1 end } if oc.in? ds.first.keys
+    data.each.with_index do |d, i|
+      d.pool = "#{i+1}. #{d.pool}"
+    end
+
+    data
   end
 
   def send_ds msg, ds, prefix: nil, suffix: nil, **params, &block
@@ -166,14 +184,14 @@ EOS
 
   def send_help msg
     help = <<-EOS
-/*report*
+/*report* <sort column>
 /*read* <pool> <wallet>
 /*track* <pool> <wallet>
 /*#{e 'pool_wallets'}* <pool> <offset> - List of tracked wallets
 Commands for monitored wallets (first use /track above):
 /*#{e 'wallet_rewards'}* <wallet>
 /*#{e 'wallet_readings'}* <wallet> <offset>
-/*#{e 'pool_rewards'}* <pool> <period=(24|72|144|216)>
+/*#{e 'pool_rewards'}* <pool> <period=(#{DB[:intervals_defs].select_map(:period).join('|')})>
 /*#{e 'pool_readings'}* <pool> <offset>
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
