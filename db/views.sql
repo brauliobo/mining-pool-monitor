@@ -37,7 +37,7 @@ FROM (
   select
     row_number() over(
       partition by wp.pool, wp.wallet, iseq
-      order by wp.pool, wp.wallet, iseq, abs(hours / period - 1) asc, second_read desc) as row,
+      order by wp.pool, wp.wallet, iseq, second_read desc, abs(hours / period - 1) asc) as row,
     wp.*
   from wallet_pairs wp
 ) wp

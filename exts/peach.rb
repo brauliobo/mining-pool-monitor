@@ -25,7 +25,7 @@ module Enumerable
 
   def api_peach threads: nil, priority: nil, &block
     peach(
-      threads:  threads || ENV['API_THREADS'] || 2,
+      threads:  threads || ENV['API_THREADS'] || 3,
       priority: priority,
       &block
     )
