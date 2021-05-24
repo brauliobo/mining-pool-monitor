@@ -141,11 +141,7 @@ class Eth
     data.pool       = pool.to_s
     data.wallet     = wallet
     data.read_at    = Time.now
-    data.hashrate ||= 0
-
     Tracked.track data
-
-    return puts "#{pool}/#{wallet}: IGNORING hashrate 0" if data.hashrate.zero?
 
     data
   end
