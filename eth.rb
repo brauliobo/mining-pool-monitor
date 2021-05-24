@@ -148,7 +148,7 @@ class Eth
 
   def pool_fetch pool
     wallets(pool).api_peach.map do |w|
-      data  = pool_read pool, w
+      data  = pool_read pool, w rescue nil
       next puts "#{pool}: no data for #{w}" unless data
       puts "#{pool}: #{data.to_h}"
 
