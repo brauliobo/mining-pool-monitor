@@ -6,11 +6,10 @@ select
   start_date::date,
   (start_date + '1 day'::interval)::date as end_date,
   row_number() over(order by start_date desc) as seq
-FROM initial_date, generate_series(initial_date.d, now(), '1 day'::interval) start_date
-where (start_date + '1 day'::interval)::date <= now() 
+FROM initial_date, generate_series(initial_date.d, current_date - '1 day'::interval, '1 day'::interval) start_date
 order by start_date DESC;
 
-drop view if exists pools, rewards;
+drop view if exists rewards;
 drop materiaLIZED view periods_materialized;
 drop view if exists filtered_wallet_pairs, wallet_pairs, periods;
 
