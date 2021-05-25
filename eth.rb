@@ -72,6 +72,17 @@ class Eth
         )
       },
     },
+    realpool: {
+      url:     'https://realpool.com.br/?#eth/dashboard?address=%{w}',
+      api:     'https://realpool.com.br:4000/api/pools/eth/miners/%{w}',
+      process: -> i {
+        data = get i.api, w: i.wallet
+        SymMash.new(
+          balance:  data.pendingBalance,
+          hashrate: data.performance.workers.map{ |k,v| v.hashrate / 1.0e6 }.sum,
+        )
+      },
+    },
     f2pool: {
       url:     'https://www.f2pool.com/eth/%{w}',
       api:     'https://api.f2pool.com/eth/%{w}',
