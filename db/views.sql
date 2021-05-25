@@ -1,11 +1,14 @@
 create or replace view intervals as
+with initial_date as (
+  select (now() - ((select max(period)/24 from intervals_defs) || ' days')::interval)::date as d
+)
 select
   start_date::date,
   (start_date + '1 day'::interval)::date as end_date,
   row_number() over(order by start_date desc) as seq
-FROM generate_series(now() - '9 days'::interval, now(), '1 day'::interval) start_date
-where (start_date + '1 day'::interval)::date <= now()
-order by start_date desc;
+FROM initial_date, generate_series(initial_date.d, now(), '1 day'::interval) start_date
+where (start_date + '1 day'::interval)::date <= now() 
+order by start_date DESC;
 
 drop view if exists pools, rewards;
 drop materiaLIZED view periods_materialized;

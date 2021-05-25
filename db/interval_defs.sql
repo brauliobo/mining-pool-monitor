@@ -1,3 +1,3 @@
 delete from intervals_defs;
-insert into intervals_defs(period,label,seq) values (24,'24h',1),(72,'3d',3),(144,'7d',6),(216,'14d',9);
+insert into intervals_defs(period,label,seq) values (24,'24h',1),(3*24,'3d',3),(7*24,'7d',6),(14*24,'14d',9);
 

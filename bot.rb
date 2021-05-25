@@ -87,7 +87,7 @@ class TelegramBot
     suffix += "\nMultiple days periods are an average of sequential 1d periods."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
     suffix += "\nData is collected <b>hourly</b> and a minimum of 12 hours of reads is required for 1d period usage."
-    ds = report_data order || '14d'
+    ds = report_data order || '7d'
     send_ds msg, ds, suffix: suffix
   end
 
