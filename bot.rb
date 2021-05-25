@@ -44,7 +44,7 @@ class TelegramBot
 
   def react msg
     text = msg.text
-    cmd,args = text.match(/^\/(\w+)\s*(.*)/).captures
+    cmd,args = text.match(/^\/(\w+)\s*(.*)/)&.captures
     return unless cmd
     return unless cmd_def = CMD_LIST[cmd.to_sym]
     if cmd_def.args
