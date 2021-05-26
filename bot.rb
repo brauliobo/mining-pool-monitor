@@ -49,13 +49,13 @@ class TelegramBot
     return unless cmd_def = CMD_LIST[cmd.to_sym]
     if cmd_def.args
       args = cmd_def.args.match(args)
-      raise ArgumentError unless args
+      raise InvalidCommand unless args
       send "cmd_#{cmd}", msg, *args.captures.map(&:presence)
     else
       send "cmd_#{cmd}", msg
     end
 
-  rescue ArgumentError
+  rescue InvalidCommand
     send_message msg, "Incorrect format, usage is:\n#{help_cmd cmd}"
   rescue => e
     send_message msg, "error: #{e e.message}"

@@ -192,13 +192,14 @@ class Eth
     data  = instance_exec input, &input.read rescue SymMash.new
     return puts "#{pool}/#{wallet}: error while fetching data" unless data
 
-    Array(data).each do |d|
+    adata = if data.is_a? Array then data else [data] end
+    adata.each do |d|
       d.coin      = 'eth'
       d.pool      = pool.to_s
       d.wallet    = wallet
       d.read_at ||= Time.now
     end
-    Tracked.track Array(data).first
+    Tracked.track adata.first
 
     data
   end
@@ -222,11 +223,11 @@ class Eth
   def pool_process pool, opts = POOLS[pool]
     data = pool_fetch pool
     return if ENV['DRY']
-    data = if opts.db_parse then data.flat_map{ |d| opts.db_parse.call d } else db_parse data end
+    data = if opts.db_parse then data.flat_map{ |d| opts.db_parse.call d } else db_parse pool, data end
     DB[:wallet_reads].insert_conflict.multi_insert data
   end
 
-  def db_parse data
+  def db_parse pool, data
     data.map! do |d|
       {
         coin:              'eth',

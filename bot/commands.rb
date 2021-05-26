@@ -1,6 +1,8 @@
 class TelegramBot
   module Commands
 
+    class InvalidCommand < StandardError; end
+
     WRX = /\w+.?\w*/
 
     CMD_LIST = SymMash.new(
