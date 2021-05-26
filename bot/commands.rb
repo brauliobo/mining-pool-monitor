@@ -56,7 +56,7 @@ class TelegramBot
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
 
       send_message msg, <<-EOS
-#{Eth.url p, w}
+#{e Eth.url p, w}
 *balance*: #{data&.balance} ETH
 *hashrate*: #{data&.hashrate} MH/s
 *tracking since*: #{tracked&.started_at || Time.now}
