@@ -53,6 +53,7 @@ class TelegramBot
 
     def cmd_read msg, p, w
       data    = @eth.pool_read p, w
+      data    = data.first if data.is_a? Array
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
 
       send_message msg, <<-EOS
