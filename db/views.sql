@@ -67,15 +67,15 @@ create materiaLIZED view periods_materialized as select * from periods;
 
 create or replace view rewards as
 select
-  p.pool,
-  wallet,
-  idf.period as period,
-  avg(hours * id.seq) filter(where id.period <= p.period * p.iseq) as hours,
-  avg(eth_mh_day)     filter(where id.period <= p.period * p.iseq) as eth_mh_day
+  pid.pool,
+  pid.wallet,
+  id.period as period,
+  avg(pid.hours * id.seq) as hours,
+  avg(pid.eth_mh_day) as eth_mh_day
 from periods_materialized p
-join intervals_defs id on id.period <= p.period * p.iseq  --period generation
-join intervals_defs idf on idf.period = p.period * p.iseq --period selection
-group by p.pool, p.wallet, idf.period
-order by p.pool, p.wallet, idf.period;
+join intervals_defs id on true
+join periods_materialized pid on pid.pool = p.pool and pid.wallet = p.wallet and id.period >= pid.period * pid.iseq
+group by pid.pool, pid.wallet, id.period
+order by pid.pool, pid.wallet, id.period;
 
 
