@@ -60,7 +60,7 @@ class Eth
       },
     },
     viabtc: {
-      url:     nil,
+      url:     'https://www.viabtc.com/observer/dashboard?access_key=%{w}&coin=ETH',
       api:     'https://www.viabtc.com/res/observer/home?access_key=%{w}&coin=ETH',
       process: -> i {
         data = get(i.api, w: i.wallet).data

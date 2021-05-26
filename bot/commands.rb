@@ -1,7 +1,7 @@
 class TelegramBot
   module Commands
 
-    WRX = '0x\h+'
+    WRX = '\h+'
 
     CMD_LIST = SymMash.new(
       start:  {},
@@ -10,11 +10,11 @@ class TelegramBot
         args: / ?(\w*)/,
       },
       read: {
-        args: /(\w+) (#{WRX})/,
+        args: /(\w+) (0?x?#{WRX})/,
         help: '<pool> <wallet>',
       },
       track: {
-        args: /(\w+) (#{WRX})/,
+        args: /(\w+) (0?x?#{WRX})/,
         help: '<pool> <wallet>',
       },
       pool_wallets: {
@@ -30,11 +30,11 @@ class TelegramBot
         help: '<pool> <offset>',
       },
       wallet_rewards: {
-        args: /(#{WRX}) ?(\d*)/,
+        args: /0?x?(#{WRX}) ?(\d*)/,
         help: '<wallet>',
       },
       wallet_readings: {
-        args: /(#{WRX}) ?(\d*)/,
+        args: /0?x?(#{WRX}) ?(\d*)/,
         help: '<wallet>',
       },
     )
