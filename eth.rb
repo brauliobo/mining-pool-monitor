@@ -1,6 +1,17 @@
 class Eth
 
   POOLS = SymMash.new(
+    ezil: {
+      url:      'https://ezil.me/personal_stats?wallet=%{w}&coin=eth',
+      balance:  'https://billing.ezil.me/balances/%{w}',
+      hashrate: 'https://stats.ezil.me/current_stats/%{w}/reported',
+      process:  -> i {
+        SymMash.new(
+          balance:  get(i.balance, w: i.wallet).eth,
+          hashrate: get(i.hashrate, w: i.wallet).reported_hashrate / 1.0e6,
+        )
+      }
+    },
     crazypool: {
       url:      'https://eth.crazypool.org/#/account/%{w}',
       api:      'https://eth.crazypool.org/api/accounts/%{w}',
