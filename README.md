@@ -6,6 +6,9 @@
   * Miners listing at https://eth.2miners.com/miners
   * No reported hashrate provided, only average
   * Dashboard example: https://eth.2miners.com/account/0xf516f80ba541e4e825b1e77679729c0f3bb8ac8c
+* Binance
+  * Only average hashrate is available
+  * Private dashboard at https://pool.binance.com/en/statistics?urlParams=XXX
 * Crazypool
   * Miners listing at https://eth.crazypool.org/#/miners
   * Only average hashrate is available
@@ -14,6 +17,10 @@
   * Miners listing per block, e.g. https://www.etherchain.org/account/0xea674fdde714fd979de3edf0f56aa9716b898ec8#blocks
   * Has reported hashrate
   * Dashboard example: https://ethermine.org/miners/c0dd4bc751e86bf1f4498f9236925d49733e91e0/dashboard
+* Ezil
+  * No miners listing
+  * Has reported hashrate
+  * Dashboard example: https://ezil.me/personal_stats?wallet=0x58a6cc48af947975d2bc32a05c071bc7fca63358.zil1c7nh23c075kcv7jcxaftjtt94j2g7qsazrlfrm&coin=eth
 * Flexpool
   * Miners listing per block, e.g. https://flexpool.io/en/block-reward-report/0x31e27146f3248f6de773af2b22d0c647916c775f7eaa2f7ce4b6e4571ccbe9c7
   * Has reported hashrate
@@ -34,5 +41,7 @@
   * No miners listing, miners to be found on blockchain: https://etherscan.io/txs?a=0x8fd00f170fdf3772c5ebdcd90bf257316c69ba45
   * Has reported hashrate
   * Dashboard example: https://www.sparkpool.com/miner/0x0f5576fa98b03e70213c1fe5c20db810b342eb3b/data?currency=ETH
-* ViaBTC: no miners listing, no public dashboard, private dashboard works with access_key
+* ViaBTC: no miners listing
+  * Only average hashrate is available
+  * Private dashboard at https://www.viabtc.com/observer/dashboard?access_key=XXX
 
