@@ -20,23 +20,23 @@ class TelegramBot
         help: '<pool> <wallet>',
       },
       pool_wallets: {
-        args: /(\w+) +?(\d*)/,
+        args: /(\w+) *(\d*)/,
         help: '<pool> <offset> - List of tracked wallets',
       },
       pool_rewards: {
-        args: /(\w+) +?(\d*)/,
+        args: /(\w+) *(\d*)/,
         help: -> { "<pool> <period=(#{DB[:intervals_defs].select_map(:period).join('|')})>" },
       },
       pool_readings: {
-        args: /(\w+) +?(\d*)/,
+        args: /(\w+) *(\d*)/,
         help: '<pool> <offset>',
       },
       wallet_rewards: {
-        args: /(#{WRX}) +?(\d*)/,
+        args: /(#{WRX}) *(\d*)/,
         help: '<wallet>',
       },
       wallet_readings: {
-        args: /(#{WRX}) +?(\d*)/,
+        args: /(#{WRX}) *(\d*)/,
         help: '<wallet>',
       },
     )
