@@ -82,12 +82,15 @@ class TelegramBot
     end.pack
   end
 
+  REPORT_DEFAULT_ORDER = '14d'
+
   def send_report msg, order = nil
-    suffix  = "The scale is e-05, ETH rewarded/MH/24h. TW means the count of tracked wallets."
-    suffix += "\nMultiple days periods are an average of sequential 1d periods."
+    suffix  = "The scale is e-05 ETH rewarded/MH/24h."
+    suffix += "\nTW means the count of tracked wallets. Default order is by highest #{REPORT_DEFAULT_ORDER} rewards."
+    suffix += "\nMultiple days periods are an average of sequential 24h periods."
     suffix += "\nIf you have a 100MH miner multiple it by 100."
     suffix += "\nData is collected <b>hourly</b> and a minimum of 12 hours of reads is required for 1d period usage."
-    ds = report_data order || '7d'
+    ds = report_data order || '14d'
     send_ds msg, ds, suffix: suffix
   end
 
