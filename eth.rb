@@ -187,10 +187,9 @@ class Eth
   end
 
   def wallets pool
-    DB[:wallets_tracked]
-      .where(coin: 'eth', pool: pool.to_s)
-      .where{ (hashrate_last > 0) | (last_read_at >= 24.hours.ago) }
-      .select_map(:wallet)
+    ds = DB[:wallets_tracked].where(coin: 'eth', pool: pool.to_s)
+    ds = ds.where{ (hashrate_last > 0) | (last_read_at >= 24.hours.ago) } unless ENV['RESCRAPE']
+    ds.select_map(:wallet)
   end
 
 end
