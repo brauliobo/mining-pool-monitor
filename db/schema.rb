@@ -14,7 +14,8 @@ Sequel.migration do
       Float :reported_hashrate
       Float :balance
       
-      index [:pool, :wallet, :balance, :read_at, :reported_hashrate], :name=>:wallets_all_index
+      index [:pool, :wallet, :balance, :read_at, :reported_hashrate], :name=>:wallet_reads_all_index
+      index [:coin, :pool, :wallet, :read_at], :name=>:wallet_reads_unique_constraint, :unique=>true
     end
     
     create_table(:wallets_tracked, :ignore_index_errors=>true) do

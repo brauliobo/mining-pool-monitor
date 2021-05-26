@@ -175,7 +175,7 @@ CREATE VIEW public.filtered_wallet_pairs AS
     wp.first_read,
     wp.second_read,
     avg(wr.reported_hashrate) FILTER (WHERE ((wr.read_at >= wp.first_read) AND (wr.read_at <= wp.second_read))) OVER (PARTITION BY wr.pool, wr.wallet, wp.iseq) AS avg_hashrate
-   FROM (( SELECT row_number() OVER (PARTITION BY wp_1.pool, wp_1.wallet, wp_1.iseq ORDER BY wp_1.second_read DESC, (abs(((wp_1.hours / (wp_1.period)::double precision) - (1)::double precision)))) AS "row",
+   FROM (( SELECT row_number() OVER (PARTITION BY wp_1.pool, wp_1.wallet, wp_1.iseq ORDER BY wp_1.second_read DESC, (wp_1.second_balance - wp_1.first_balance) DESC, (abs(((wp_1.hours / (wp_1.period)::double precision) - (1)::double precision)))) AS "row",
             wp_1.pool,
             wp_1.wallet,
             wp_1.iseq,
@@ -260,6 +260,14 @@ CREATE VIEW public.rewards AS
 ALTER TABLE public.rewards OWNER TO braulio;
 
 --
+-- Name: wallet_reads wallet_reads_unique_constraint; Type: CONSTRAINT; Schema: public; Owner: braulio
+--
+
+ALTER TABLE ONLY public.wallet_reads
+    ADD CONSTRAINT wallet_reads_unique_constraint UNIQUE (coin, pool, wallet, read_at);
+
+
+--
 -- Name: wallets_tracked wallets_tracked_pkey; Type: CONSTRAINT; Schema: public; Owner: braulio
 --
 
@@ -276,10 +284,10 @@ ALTER TABLE ONLY public.wallets_tracked
 
 
 --
--- Name: wallets_all_index; Type: INDEX; Schema: public; Owner: braulio
+-- Name: wallet_reads_all_index; Type: INDEX; Schema: public; Owner: braulio
 --
 
-CREATE INDEX wallets_all_index ON public.wallet_reads USING btree (pool, wallet, balance, read_at, reported_hashrate);
+CREATE INDEX wallet_reads_all_index ON public.wallet_reads USING btree (pool, wallet, balance, read_at, reported_hashrate);
 
 
 --
