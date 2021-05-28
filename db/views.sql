@@ -40,7 +40,7 @@ FROM (
   select
     row_number() over(
       partition by wp.pool, wp.wallet, iseq
-      order by second_read desc, first_balance asc, abs(hours / period - 1) asc) as row,
+      order by second_read desc, CASE WHEN first_balance = 0 THEN 0 ELSE 1 end, abs(hours / period - 1) asc) as row,
     wp.*
   from wallet_pairs wp
 ) wp
