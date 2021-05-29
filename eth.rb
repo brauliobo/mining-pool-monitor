@@ -144,9 +144,11 @@ class Eth
       balance: 'https://hiveon.net/api/v1/stats/miner/%{w}/ETH/billing-acc',
       read: -> i {
         w = i.wallet.downcase.gsub(/^0x/, '')
+        stats = get(i.stats, w: w)
         SymMash.new(
           balance:  get(i.balance, w: w).totalUnpaid,
-          hashrate: get(i.stats, w: w).reportedHashrate.to_i / 1.0e6,
+          hashrate: stats.reportedHashrate.to_i / 1.0e6,
+          average_hashrate: stats.hashrate24h.to_i / 1.0e6,
         )
       },
     },
@@ -195,9 +197,10 @@ class Eth
 
     adata = if data.is_a? Array then data else [data] end
     adata.each do |d|
-      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and d.current_hashrate / d.hashrate > 2
+      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and (d.current_hashrate / d.hashrate - 1).abs > 2
 
-      d.hashrate = d.average_hashrate if d.average_hashrate and d.average_hashrate / d.hashrate > 2
+      # due to conflicting worker name in multiple miners, reported can be lower
+      d.hashrate = d.average_hashrate if d.average_hashrate and (d.average_hashrate/d.hashrate-1).abs > 2
 
       d.coin      = 'eth'
       d.pool      = pool.to_s
