@@ -1,0 +1,15 @@
+[Unit]
+Description=mining_pools_monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=braulio
+WorkingDirectory=/home/braulio/Projects/mining-pools-monitor
+ExecStart=/home/braulio/.rvm/wrappers/ruby-2.5.3/ruby bin/bot
+Restart=always
+Environment="TOKEN=X"
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
