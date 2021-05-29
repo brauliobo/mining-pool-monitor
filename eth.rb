@@ -196,7 +196,8 @@ class Eth
     adata = if data.is_a? Array then data else [data] end
     adata.each do |d|
       return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and d.current_hashrate / d.hashrate > 2
-      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.average_hashrate and d.average_hashrate / d.hashrate > 2
+
+      d.hashrate = d.average_hashrate if d.average_hashrate and d.average_hashrate / d.hashrate > 2
 
       d.coin      = 'eth'
       d.pool      = pool.to_s
