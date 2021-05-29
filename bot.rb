@@ -111,7 +111,8 @@ class TelegramBot
 
     data = ds.all.map{ |d| SymMash.new d }
     oc   = order.to_sym if order
-    data = data.sort{ |a,b| if a[oc] && b[oc] then b[oc] <=> a[oc] elsif a[oc] then -1 else 1 end } if oc.in? data.first.keys
+    oc   = REPORT_DEFAULT_ORDER unless oc.in? data.first.keys
+    data = data.sort{ |a,b| if a[oc] && b[oc] then b[oc] <=> a[oc] elsif a[oc] then -1 else 1 end }
     data.each.with_index do |d, i|
       d.pool = "#{i+1}. #{d.pool}"
     end
