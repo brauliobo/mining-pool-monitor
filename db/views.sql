@@ -20,12 +20,13 @@ select
   i.seq as iseq,
   24 as period,
   extract(epoch from p2.read_at - p.read_at) / 3600 as hours,
-  (p.reported_hashrate + p2.reported_hashrate) / 2 as hashrate,
   p2.balance - p.balance as reward,
-  p.balance as first_balance,
-  p2.balance as second_balance,
-  p.read_at as first_read,
-  p2.read_at as second_read
+  p.reported_hashrate AS first_hashrate,
+  p2.reported_hashrate AS second_hashrate,
+  p.balance  AS first_balance,
+  p2.balance AS second_balance,
+  p.read_at  AS first_read,
+  p2.read_at AS second_read
 from wallet_reads p
 JOIN wallets_tracked pt ON pt.pool = p.pool AND pt.wallet = p.wallet AND pt.hashrate_last > 0 
 join wallet_reads p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
@@ -62,7 +63,7 @@ select
   to_char(first_read, 'MM/DD HH24:MI') as "1st read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
 from filtered_wallet_pairs
-WHERE 100*abs(hashrate/avg_hashrate - 1) < 5;
+WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 5;
 
 create materiaLIZED view periods_materialized as select * from periods;
 
