@@ -25,10 +25,12 @@ class TelegramBot
             DB.refresh_view :periods_materialized
             send_report SymMash.new chat: {id: ENV['REPORT_CHAT_ID'].to_i}
           end
+          db_run 'db/cleanup.sql' if Time.now.hour == 0
+
           sleep 1.minute
+        rescue => e
+          puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
         end
-      rescue => e
-        puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
       end
 
       puts "bot: started, listening"
@@ -108,7 +110,7 @@ class TelegramBot
 
     data = ds.all.map{ |d| SymMash.new d }
     oc   = order.to_sym if order
-    data = data.sort{ |a,b| if a[oc] && b[oc] then b[oc] <=> a[oc] elsif a[oc] then -1 else 1 end } if oc.in? ds.first.keys
+    data = data.sort{ |a,b| if a[oc] && b[oc] then b[oc] <=> a[oc] elsif a[oc] then -1 else 1 end } if oc.in? data.first.keys
     data.each.with_index do |d, i|
       d.pool = "#{i+1}. #{d.pool}"
     end

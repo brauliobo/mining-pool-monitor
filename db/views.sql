@@ -36,7 +36,8 @@ join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_
 CREATE OR replace VIEW filtered_wallet_pairs as
 select distinct
   wp.*,
-  avg(wr.reported_hashrate) filter(where wr.read_at >= wp.first_read AND wr.read_at <= wp.second_read) over(partition by wr.pool, wr.wallet, iseq) AS avg_hashrate
+  avg(wr.reported_hashrate) filter(where wr.read_at >= wp.first_read AND wr.read_at <= wp.second_read) 
+                              over(partition by wr.pool, wr.wallet, iseq) AS avg_hashrate
 FROM (
   select
     row_number() over(

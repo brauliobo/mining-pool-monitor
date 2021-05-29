@@ -180,6 +180,7 @@ class Eth
 
   def get url, params
     url  = url % params
+    puts "GET #{url}" if ENV['DEBUG']
     data = Mechanize.new.get url
     data = SymMash.new JSON.parse data.body
     data

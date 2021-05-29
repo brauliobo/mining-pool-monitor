@@ -11,5 +11,9 @@ if ENV['DEBUG']
   DB.loggers << Logger.new($stdout)
 end
 
-DB.run File.read ARGV[0] if ARGV[0] and File.exists? ARGV[0]
+def db_run file
+  DB.run File.read file if File.exists? file
+end
+
+db_run ARGV[0] if ARGV[0]
 
