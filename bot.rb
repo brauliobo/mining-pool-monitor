@@ -27,7 +27,8 @@ class TelegramBot
           end
           db_run 'db/cleanup.sql' if Time.now.hour == 0
 
-          sleep 1.minute
+          # sleep until next minute
+          sleep ((DateTime.now.beginning_of_minute + 1.minute - DateTime.now)*1.day).to_i
         rescue => e
           puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
         end
