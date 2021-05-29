@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 13.2
--- Dumped by pg_dump version 13.2
+-- Dumped by pg_dump version 13.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -49,6 +49,50 @@ $_$;
 
 
 ALTER FUNCTION public._final_median(numeric[]) OWNER TO braulio;
+
+--
+-- Name: _final_median(anyarray); Type: FUNCTION; Schema: public; Owner: braulio
+--
+
+CREATE FUNCTION public._final_median(anyarray) RETURNS double precision
+    LANGUAGE sql IMMUTABLE
+    AS $_$ 
+  WITH q AS
+  (
+     SELECT val
+     FROM unnest($1) val
+     WHERE VAL IS NOT NULL
+     ORDER BY 1
+  ),
+  cnt AS
+  (
+    SELECT COUNT(*) as c FROM q
+  )
+  SELECT AVG(val)::float8
+  FROM 
+  (
+    SELECT val FROM q
+    LIMIT  2 - MOD((SELECT c FROM cnt), 2)
+    OFFSET GREATEST(CEIL((SELECT c FROM cnt) / 2.0) - 1,0)  
+  ) q2;
+$_$;
+
+
+ALTER FUNCTION public._final_median(anyarray) OWNER TO braulio;
+
+--
+-- Name: median(anyelement); Type: AGGREGATE; Schema: public; Owner: braulio
+--
+
+CREATE AGGREGATE public.median(anyelement) (
+    SFUNC = array_append,
+    STYPE = anyarray,
+    INITCOND = '{}',
+    FINALFUNC = public._final_median
+);
+
+
+ALTER AGGREGATE public.median(anyelement) OWNER TO braulio;
 
 --
 -- Name: median(numeric); Type: AGGREGATE; Schema: public; Owner: braulio
@@ -143,8 +187,9 @@ CREATE VIEW public.wallet_pairs AS
     i.seq AS iseq,
     24 AS period,
     (date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) AS hours,
-    ((p.reported_hashrate + p2.reported_hashrate) / (2)::double precision) AS hashrate,
     (p2.balance - p.balance) AS reward,
+    p.reported_hashrate AS first_hashrate,
+    p2.reported_hashrate AS second_hashrate,
     p.balance AS first_balance,
     p2.balance AS second_balance,
     p.read_at AS first_read,
@@ -152,7 +197,7 @@ CREATE VIEW public.wallet_pairs AS
    FROM (((public.wallet_reads p
      JOIN public.wallets_tracked pt ON (((pt.pool = p.pool) AND (pt.wallet = p.wallet) AND (pt.hashrate_last > (0)::double precision))))
      JOIN public.wallet_reads p2 ON (((p2.pool = p.pool) AND (p2.wallet = p.wallet) AND (p2.balance > p.balance))))
-     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (75)::double precision))));
+     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))));
 
 
 ALTER TABLE public.wallet_pairs OWNER TO braulio;
@@ -168,21 +213,27 @@ CREATE VIEW public.filtered_wallet_pairs AS
     wp.iseq,
     wp.period,
     wp.hours,
-    wp.hashrate,
     wp.reward,
+    wp.first_hashrate,
+    wp.second_hashrate,
     wp.first_balance,
     wp.second_balance,
     wp.first_read,
     wp.second_read,
     avg(wr.reported_hashrate) FILTER (WHERE ((wr.read_at >= wp.first_read) AND (wr.read_at <= wp.second_read))) OVER (PARTITION BY wr.pool, wr.wallet, wp.iseq) AS avg_hashrate
-   FROM (( SELECT row_number() OVER (PARTITION BY wp_1.pool, wp_1.wallet, wp_1.iseq ORDER BY wp_1.second_read DESC, (wp_1.second_balance - wp_1.first_balance) DESC, (abs(((wp_1.hours / (wp_1.period)::double precision) - (1)::double precision)))) AS "row",
+   FROM (( SELECT row_number() OVER (PARTITION BY wp_1.pool, wp_1.wallet, wp_1.iseq ORDER BY wp_1.second_read DESC,
+                CASE
+                    WHEN (wp_1.first_balance = (0)::double precision) THEN 0
+                    ELSE 1
+                END, (abs(((wp_1.hours / (wp_1.period)::double precision) - (1)::double precision)))) AS "row",
             wp_1.pool,
             wp_1.wallet,
             wp_1.iseq,
             wp_1.period,
             wp_1.hours,
-            wp_1.hashrate,
             wp_1.reward,
+            wp_1.first_hashrate,
+            wp_1.second_hashrate,
             wp_1.first_balance,
             wp_1.second_balance,
             wp_1.first_read,
@@ -212,7 +263,7 @@ CREATE VIEW public.periods AS
     to_char(filtered_wallet_pairs.first_read, 'MM/DD HH24:MI'::text) AS "1st read",
     to_char(filtered_wallet_pairs.second_read, 'MM/DD HH24:MI'::text) AS "2nd read"
    FROM public.filtered_wallet_pairs
-  WHERE (((100)::double precision * abs(((filtered_wallet_pairs.hashrate / filtered_wallet_pairs.avg_hashrate) - (1)::double precision))) < (5)::double precision);
+  WHERE (((100)::double precision * abs(((filtered_wallet_pairs.second_hashrate / filtered_wallet_pairs.avg_hashrate) - (1)::double precision))) < (5)::double precision);
 
 
 ALTER TABLE public.periods OWNER TO braulio;
