@@ -197,10 +197,10 @@ class Eth
 
     adata = if data.is_a? Array then data else [data] end
     adata.each do |d|
-      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and (d.current_hashrate / d.hashrate - 1).abs > 2
+      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and high_mh_deviation? d.current_hashrate, d.hashrate
 
       # due to conflicting worker name in multiple miners, reported can be lower
-      d.hashrate = d.average_hashrate if d.average_hashrate and (d.average_hashrate/d.hashrate-1).abs > 2
+      d.hashrate = d.average_hashrate if d.average_hashrate and high_mh_deviation? d.average_hashrate, d.hashrate
 
       d.coin      = 'eth'
       d.pool      = pool.to_s
@@ -210,6 +210,10 @@ class Eth
     Tracked.track adata.first
 
     data
+  end
+
+  def high_mh_deviation? v1, v2
+    (v1/v2 - 1).abs > 1
   end
 
   def pool_fetch pool
