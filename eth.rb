@@ -84,11 +84,10 @@ class Eth
       read: -> i {
         w = i.wallet.downcase.gsub(/^0x/, '')
         data = get(i.api, w: w).data
-        # ignore bad hashrates
-        return if data.currentStatistics.currentHashrate / data.currentStatistics.reportedHashrate > 2
         SymMash.new(
           balance:  data.currentStatistics.unpaid / 1.0e18,
           hashrate: data.currentStatistics.reportedHashrate / 1.0e6,
+          current_hashrate: data.currentStatistics.currentHashrate / 1.0e6,
         )
       },
     },
@@ -135,6 +134,7 @@ class Eth
         SymMash.new(
           balance:  data.balance,
           hashrate: data.local_hash / 1.0e6,
+          average_hashrate: data.hashes_last_day / (3600 * 24) / 1.0e6,
         )
       },
     },
@@ -195,6 +195,9 @@ class Eth
 
     adata = if data.is_a? Array then data else [data] end
     adata.each do |d|
+      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and d.current_hashrate / d.hashrate > 2
+      return puts "#{pool}/#{wallet}: discarding deviating hashrate" if d.average_hashrate and d.average_hashrate / d.hashrate > 2
+
       d.coin      = 'eth'
       d.pool      = pool.to_s
       d.wallet    = wallet
