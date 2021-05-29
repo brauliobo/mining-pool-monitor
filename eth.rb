@@ -70,11 +70,11 @@ class Eth
     flexpool: {
       url:      'https://flexpool.io/%{w}',
       balance:  'https://flexpool.io/api/v1/miner/%{w}/balance/',
-      hashrate: 'https://flexpool.io/api/v1/miner/%{w}/stats/',
+      hashrate: 'https://api.flexpool.io/v2/miner/workers?coin=eth&address=%{w}',
       read: -> i {
         SymMash.new(
           balance:  get(i.balance, w: i.wallet).result / 1.0e18,
-          hashrate: get(i.hashrate, w: i.wallet).result.daily.reported_hashrate / 1.0e6,
+          hashrate: get(i.hashrate, w: i.wallet).result.sum(&:reportedHashrate) / 1.0e6,
         )
       },
     },
