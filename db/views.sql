@@ -64,7 +64,7 @@ select
   to_char(first_read, 'MM/DD HH24:MI') as "1st read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
 from filtered_wallet_pairs
-WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 5;
+WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10;
 
 create materiaLIZED view periods_materialized as select * from periods;
 
@@ -87,11 +87,12 @@ select
   pool,
   wallet,
   b.period,
-  avg(eth_mh_day) AS eth_mh_day
+  --avg(eth_mh_day) AS eth_mh_day
+  percentile_cont(0.5) WITHIN GROUP (ORDER by eth_mh_day) as eth_mh_day
 from grouped_periods b
 join intervals_defs id on id.period = b.period
 -- for multiple periods consider data starting at least on 2/3 and a minimum of half data points
-where (iseq_max = 1 AND b.period = 24) OR (iseq_max >= id.seq * 2/3 and iseq_count >= id.seq / 2)
+where (iseq_max = 1 AND b.period = 24) OR (iseq_max >= round(id.seq * 2/3) and iseq_count >= round(id.seq / 2))
 group by pool, wallet, b.period 
 order by pool, wallet, b.period;
 
