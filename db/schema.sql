@@ -153,7 +153,7 @@ CREATE TABLE public.wallet_reads (
     pool text,
     wallet text,
     read_at timestamp without time zone,
-    reported_hashrate double precision,
+    hashrate double precision,
     balance double precision
 );
 
@@ -188,8 +188,8 @@ CREATE VIEW public.wallet_pairs AS
     24 AS period,
     (date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) AS hours,
     (p2.balance - p.balance) AS reward,
-    p.reported_hashrate AS first_hashrate,
-    p2.reported_hashrate AS second_hashrate,
+    p.hashrate AS first_hashrate,
+    p2.hashrate AS second_hashrate,
     p.balance AS first_balance,
     p2.balance AS second_balance,
     p.read_at AS first_read,
@@ -220,7 +220,7 @@ CREATE VIEW public.filtered_wallet_pairs AS
     wp.second_balance,
     wp.first_read,
     wp.second_read,
-    avg(wr.reported_hashrate) FILTER (WHERE ((wr.read_at >= wp.first_read) AND (wr.read_at <= wp.second_read))) OVER (PARTITION BY wr.pool, wr.wallet, wp.iseq) AS avg_hashrate
+    avg(wr.hashrate) FILTER (WHERE ((wr.read_at >= wp.first_read) AND (wr.read_at <= wp.second_read))) OVER (PARTITION BY wr.pool, wr.wallet, wp.iseq) AS avg_hashrate
    FROM (( SELECT row_number() OVER (PARTITION BY wp_1.pool, wp_1.wallet, wp_1.iseq ORDER BY wp_1.second_read DESC,
                 CASE
                     WHEN (wp_1.first_balance = (0)::double precision) THEN 0
@@ -292,20 +292,40 @@ CREATE MATERIALIZED VIEW public.periods_materialized AS
 ALTER TABLE public.periods_materialized OWNER TO braulio;
 
 --
--- Name: rewards; Type: VIEW; Schema: public; Owner: braulio
+-- Name: grouped_periods; Type: VIEW; Schema: public; Owner: braulio
 --
 
-CREATE VIEW public.rewards AS
+CREATE VIEW public.grouped_periods AS
  SELECT pid.pool,
     pid.wallet,
     id.period,
-    avg((pid.hours * (id.seq)::numeric)) AS hours,
-    avg(pid.eth_mh_day) AS eth_mh_day
+    percentile_cont((0.5)::double precision) WITHIN GROUP (ORDER BY ((pid.eth_mh_day)::double precision)) AS eth_mh_day,
+    min(pid.iseq) AS iseq_min,
+    max(pid.iseq) AS iseq_max,
+    count(DISTINCT pid.iseq) AS iseq_count
    FROM ((public.periods_materialized p
      JOIN public.intervals_defs id ON (true))
      JOIN public.periods_materialized pid ON (((pid.pool = p.pool) AND (pid.wallet = p.wallet) AND (id.period >= (pid.period * pid.iseq)))))
   GROUP BY pid.pool, pid.wallet, id.period
   ORDER BY pid.pool, pid.wallet, id.period;
+
+
+ALTER TABLE public.grouped_periods OWNER TO braulio;
+
+--
+-- Name: rewards; Type: VIEW; Schema: public; Owner: braulio
+--
+
+CREATE VIEW public.rewards AS
+ SELECT b.pool,
+    b.wallet,
+    b.period,
+    avg(b.eth_mh_day) AS eth_mh_day
+   FROM (public.grouped_periods b
+     JOIN public.intervals_defs id ON ((id.period = b.period)))
+  WHERE (((b.iseq_max = 1) AND (b.period = 24)) OR ((b.iseq_max >= ((id.seq * 2) / 3)) AND (b.iseq_count >= (id.seq / 2))))
+  GROUP BY b.pool, b.wallet, b.period
+  ORDER BY b.pool, b.wallet, b.period;
 
 
 ALTER TABLE public.rewards OWNER TO braulio;
@@ -338,7 +358,7 @@ ALTER TABLE ONLY public.wallets_tracked
 -- Name: wallet_reads_all_index; Type: INDEX; Schema: public; Owner: braulio
 --
 
-CREATE INDEX wallet_reads_all_index ON public.wallet_reads USING btree (pool, wallet, balance, read_at, reported_hashrate);
+CREATE INDEX wallet_reads_all_index ON public.wallet_reads USING btree (pool, wallet, balance, read_at, hashrate);
 
 
 --

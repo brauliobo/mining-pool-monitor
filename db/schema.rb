@@ -11,10 +11,10 @@ Sequel.migration do
       String :pool, :text=>true
       String :wallet, :text=>true
       DateTime :read_at
-      Float :reported_hashrate
+      Float :hashrate
       Float :balance
       
-      index [:pool, :wallet, :balance, :read_at, :reported_hashrate], :name=>:wallet_reads_all_index
+      index [:pool, :wallet, :balance, :read_at, :hashrate], :name=>:wallet_reads_all_index
       index [:coin, :pool, :wallet, :read_at], :name=>:wallet_reads_unique_constraint, :unique=>true
     end
     
