@@ -87,6 +87,7 @@ EOS
       ds = DB[:periods_materialized]
         .select(*DB[:periods_materialized].columns.excluding(:pool, :wallet, :period)) # make it shorter
         .where(Sequel.ilike :wallet, w)
+        .order(:iseq)
         .offset(off&.to_i)
       send_ds msg, ds
     end
@@ -96,12 +97,13 @@ EOS
         .select(*DB[:rewards].columns.excluding(:pool)) # make it shorter
         .where(pool: p)
         .where(period: period&.to_i || 24)
+        .order(:eth_mh_day)
       send_ds msg, ds
     end
 
     def cmd_wallet_readings msg, w, off
       ds = DB[:wallet_reads]
-        .select(:pool, :read_at, :reported_hashrate.as(:MH), :balance)
+        .select(:pool, :read_at, :hashrate.as(:MH), :balance)
         .where(Sequel.ilike :wallet, w)
         .order(Sequel.desc :read_at)
         .offset(off&.to_i)

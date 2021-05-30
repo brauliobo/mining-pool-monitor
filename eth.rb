@@ -18,12 +18,12 @@ class Eth
       db_parse: -> data {
         data.flat_map do |d|
           dr = {
-            coin:              d.coin,
-            pool:              d.pool,
-            wallet:            d.wallet,
-            read_at:           d.read_at,
-            reported_hashrate: d.hashrate,
-            balance:           d.balance,
+            coin:     d.coin,
+            pool:     d.pool,
+            wallet:   d.wallet,
+            read_at:  d.read_at,
+            hashrate: d.hashrate,
+            balance:  d.balance,
           }
           dr0 = dr.merge(
             read_at: d.read_at - 24.hours + 1.minute,
@@ -242,12 +242,12 @@ class Eth
   def db_parse pool, data
     data.map! do |d|
       {
-        coin:              'eth',
-        pool:              pool.to_s,
-        wallet:            d.wallet,
-        read_at:           d.read_at,
-        reported_hashrate: d.hashrate,
-        balance:           d.balance,
+        coin:     'eth',
+        pool:     pool.to_s,
+        wallet:   d.wallet,
+        read_at:  d.read_at,
+        hashrate: d.hashrate,
+        balance:  d.balance,
       }
     end
   end

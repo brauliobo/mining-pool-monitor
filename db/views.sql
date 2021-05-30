@@ -9,7 +9,7 @@ select
 FROM initial_date, generate_series(initial_date.d, current_date - '1 day'::interval, '1 day'::interval) start_date
 order by start_date DESC;
 
-drop view if exists rewards;
+drop view if exists grouped_periods, rewards;
 drop materiaLIZED view periods_materialized;
 drop view if exists filtered_wallet_pairs, wallet_pairs, periods;
 
@@ -21,8 +21,8 @@ select
   24 as period,
   extract(epoch from p2.read_at - p.read_at) / 3600 as hours,
   p2.balance - p.balance as reward,
-  p.reported_hashrate AS first_hashrate,
-  p2.reported_hashrate AS second_hashrate,
+  p.hashrate AS first_hashrate,
+  p2.hashrate AS second_hashrate,
   p.balance  AS first_balance,
   p2.balance AS second_balance,
   p.read_at  AS first_read,
@@ -36,8 +36,8 @@ join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_
 CREATE OR replace VIEW filtered_wallet_pairs as
 select distinct
   wp.*,
-  avg(wr.reported_hashrate) filter(where wr.read_at >= wp.first_read AND wr.read_at <= wp.second_read) 
-                              over(partition by wr.pool, wr.wallet, iseq) AS avg_hashrate
+  avg(wr.hashrate) filter(where wr.read_at >= wp.first_read AND wr.read_at <= wp.second_read) 
+                     over(partition by wr.pool, wr.wallet, iseq) AS avg_hashrate
 FROM (
   select
     row_number() over(
@@ -68,17 +68,32 @@ WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 5;
 
 create materiaLIZED view periods_materialized as select * from periods;
 
+create or replace view grouped_periods as
+  select 
+    pid.pool, pid.wallet, id.period,
+    --avg(pid.eth_mh_day) AS eth_mh_day,
+    percentile_cont(0.5) WITHIN GROUP (ORDER by pid.eth_mh_day) as eth_mh_day,
+    min(pid.iseq) as iseq_min,
+    max(pid.iseq) as iseq_max,
+    count(distinct pid.iseq) as iseq_count
+  from periods_materialized p
+  join intervals_defs id on true
+  join periods_materialized pid on pid.pool = p.pool and pid.wallet = p.wallet and id.period >= pid.period * pid.iseq
+  group by pid.pool, pid.wallet, id.period
+  order by pid.pool, pid.wallet, id.period;
+
 create or replace view rewards as
 select
-  pid.pool,
-  pid.wallet,
-  id.period as period,
-  avg(pid.hours * id.seq) as hours,
-  avg(pid.eth_mh_day) as eth_mh_day
-from periods_materialized p
-join intervals_defs id on true
-join periods_materialized pid on pid.pool = p.pool and pid.wallet = p.wallet and id.period >= pid.period * pid.iseq
-group by pid.pool, pid.wallet, id.period
-order by pid.pool, pid.wallet, id.period;
+  pool,
+  wallet,
+  b.period,
+  avg(eth_mh_day) AS eth_mh_day
+from grouped_periods b
+join intervals_defs id on id.period = b.period
+-- for multiple periods consider data starting at least on 2/3 and a minimum of half data points
+where (iseq_max = 1 AND b.period = 24) OR (iseq_max >= id.seq * 2/3 and iseq_count >= id.seq / 2)
+group by pool, wallet, b.period 
+order by pool, wallet, b.period;
+
 
 
