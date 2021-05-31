@@ -36,8 +36,7 @@ class Eth
           )
           [dr0, dr]
         end
-
-      }
+      },
     },
     ezil: {
       url:      'https://ezil.me/personal_stats?wallet=%{w}&coin=eth',
@@ -266,21 +265,8 @@ class Eth
   def pool_process pool, opts = POOLS[pool]
     data = pool_fetch pool
     return if ENV['DRY']
-    data = if opts.db_parse then data.flat_map{ |d| opts.db_parse.call d } else db_parse pool, data end
+    data = if opts.db_parse then data.flat_map{ |d| opts.db_parse.call d } else data end
     DB[:wallet_reads].insert_conflict.multi_insert data
-  end
-
-  def db_parse pool, data
-    data.map! do |d|
-      {
-        coin:     'eth',
-        pool:     pool.to_s,
-        wallet:   d.wallet,
-        read_at:  d.read_at,
-        hashrate: d.hashrate,
-        balance:  d.balance,
-      }
-    end
   end
 
   def wallets pool
