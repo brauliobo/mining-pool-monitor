@@ -13,6 +13,10 @@
   * Miners listing at https://eth.crazypool.org/#/miners
   * Only average hashrate is available
   * Dashboard example at https://eth.crazypool.org/#/account/0xe3d773049b72328da343c5737ccdbe5ee8180e62
+* Cruxpool
+  * No miners listing, miners to be found on blockchain: https://etherscan.io/txs?a=0x249bdb4499bd7c683664c149276c1d86108e2137&p=4
+  * Has reported hashrate
+  * Dashboard example at https://cruxpool.com/eth/miner/0x29bc4bfeb07b3c29686de458dd0fe14962b06638
 * Ethermine
   * Miners listing per block, e.g. https://www.etherchain.org/account/0xea674fdde714fd979de3edf0f56aa9716b898ec8#blocks
   * Has reported hashrate
