@@ -73,9 +73,9 @@ create or replace view grouped_periods as
     pid.pool, pid.wallet, id.period,
 --    avg(pid.eth_mh_day) AS eth_mh_day,
     percentile_cont(0.5) WITHIN GROUP (ORDER by pid.eth_mh_day) as eth_mh_day,
-    avg(DISTINCT pid."MH") as hashrate,
-    sum(distinct pid.hours) as hours,
-    sum(distinct pid.reward) as reward,
+    avg(pid."MH") as hashrate,
+    sum(pid.hours) as hours,
+    sum(pid.reward) as reward,
     min(pid.iseq) as iseq_min,
     max(pid.iseq) as iseq_max,
     count(distinct pid.iseq) as iseq_count
