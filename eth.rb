@@ -1,6 +1,18 @@
 class Eth
 
   POOLS = SymMash.new(
+    minerall: {
+      url:      'https://minerall.io/minerstats/%{w}',
+      balance:  'https://user.minerall.io/api/statistics/last-activity/%{w}',
+      hashrate: 'https://user.minerall.io/api/statistics/hashrate-chart/%{w}',
+      read:  -> i {
+        hashrates = get(i.hashrate, w: i.wallet)
+        SymMash.new(
+          balance:  get(i.balance, w: i.wallet).first.total_balance.to_f,
+          hashrate: hashrates.sum{ |d| d.hashrate.to_f } / hashrates.size / 1.0e6,
+        )
+      },
+    },
     binance: {
       url:  'https://pool.binance.com/en/statistics?urlParams=%{w}',
       api:  'https://pool.binance.com/mining-api/v1/public/pool/profit/miner?observerToken=%{w}&pageSize=20',
@@ -208,7 +220,9 @@ class Eth
     url  = url % params
     puts "GET #{url}" if ENV['DEBUG']
     data = Mechanize.new.get url
-    data = SymMash.new JSON.parse data.body
+    data = JSON.parse data.body
+    data = SymMash.new data if data.is_a? Hash
+    data = data.map{ |d| SymMash.new d } if data.is_a? Array
     data
   rescue => e
     puts "error #{url}: #{e.message}"
