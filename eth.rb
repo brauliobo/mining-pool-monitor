@@ -45,6 +45,17 @@ class Eth
         )
       },
     },
+    zetpool: {
+      url:      'https://eth.zet-tech.eu/#/account/%{w}',
+      api:      'https://eth.zet-tech.eu/api/accounts/%{w}',
+      read:  -> i {
+        data = get i.api, w: i.wallet
+        SymMash.new(
+          balance:  data.stats.balance / 1.0e9,
+          hashrate: data.hashrate / 1.0e6,
+        )
+      },
+    },
     crazypool: {
       url:      'https://eth.crazypool.org/#/account/%{w}',
       api:      'https://eth.crazypool.org/api/accounts/%{w}',
