@@ -15,7 +15,7 @@ class Eth
     },
     binance: {
       url:  'https://pool.binance.com/en/statistics?urlParams=%{w}',
-      api:  'https://pool.binance.com/mining-api/v1/public/pool/profit/miner?observerToken=%{w}&pageSize=20',
+      api:  'https://pool.binance.com/mining-api/v1/public/pool/profit/miner?observerToken=%{w}&pageSize=30',
       read:  -> i {
         data = get i.api, w: i.wallet
         data.data.accountProfits.map do |d|
@@ -29,14 +29,7 @@ class Eth
       },
       db_parse: -> data {
         data.flat_map do |d|
-          dr = {
-            coin:     d.coin,
-            pool:     d.pool,
-            wallet:   d.wallet,
-            read_at:  d.read_at,
-            hashrate: d.hashrate,
-            balance:  d.balance,
-          }
+          dr  = d.dup
           dr0 = dr.merge(
             read_at: d.read_at - 24.hours + 1.minute,
             balance: 0,
