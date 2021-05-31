@@ -45,6 +45,17 @@ class Eth
         )
       },
     },
+    cruxpool: {
+      url:      'https://cruxpool.com/eth/miner/%{w}',
+      hashrate: 'https://us3.cruxpool.com/api/eth/miner/%{w}',
+      balance:  ' https://us3.cruxpool.com/api/eth/miner/%{w}/balance',
+      read:  -> i {
+        SymMash.new(
+          balance:  get(i.balance, w: i.wallet).data.balance.to_f / 1.0e9,
+          hashrate: get(i.hashrate, w: i.wallet).data.reportedHashrate / 1.0e6,
+        )
+      },
+    },
     zetpool: {
       url:      'https://eth.zet-tech.eu/#/account/%{w}',
       api:      'https://eth.zet-tech.eu/api/accounts/%{w}',
