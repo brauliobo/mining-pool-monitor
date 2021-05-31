@@ -85,6 +85,7 @@ create or replace view grouped_periods as
   group by pid.pool, pid.wallet, id.period
   order by pid.pool, pid.wallet, id.period;
 
+-- not working yet, as it is potencially grouping different hashrates
 create or replace view grouped_rewards as
   select  
     pool, wallet, period,
