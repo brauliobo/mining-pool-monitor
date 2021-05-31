@@ -9,7 +9,7 @@ select
 FROM initial_date, generate_series(initial_date.d, current_date - '1 day'::interval, '1 day'::interval) start_date
 order by start_date DESC;
 
-drop view if exists grouped_periods, rewards;
+drop view if exists grouped_periods, grouped_rewards, rewards;
 drop materiaLIZED view periods_materialized;
 drop view if exists filtered_wallet_pairs, wallet_pairs, periods;
 
@@ -69,10 +69,13 @@ WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10;
 create materiaLIZED view periods_materialized as select * from periods;
 
 create or replace view grouped_periods as
-  select 
+   select 
     pid.pool, pid.wallet, id.period,
-    --avg(pid.eth_mh_day) AS eth_mh_day,
+--    avg(pid.eth_mh_day) AS eth_mh_day,
     percentile_cont(0.5) WITHIN GROUP (ORDER by pid.eth_mh_day) as eth_mh_day,
+    avg(DISTINCT pid."MH") as hashrate,
+    sum(distinct pid.hours) as hours,
+    sum(distinct pid.reward) as reward,
     min(pid.iseq) as iseq_min,
     max(pid.iseq) as iseq_max,
     count(distinct pid.iseq) as iseq_count
@@ -82,6 +85,14 @@ create or replace view grouped_periods as
   group by pid.pool, pid.wallet, id.period
   order by pid.pool, pid.wallet, id.period;
 
+create or replace view grouped_rewards as
+  select  
+    pool, wallet, period,
+    reward, hours, hashrate,
+    iseq_min, iseq_max, iseq_count,
+    avg((100000 * (24 / hours) * (reward / hashrate))::numeric) over(partition by pool, wallet, period) as eth_mh_day
+  from grouped_periods gp;
+ 
 create or replace view rewards as
 select
   pool,
