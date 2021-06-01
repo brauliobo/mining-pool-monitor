@@ -45,7 +45,8 @@
   * No miners listing, miners to be found on blockchain: https://etherscan.io/txs?a=0x8fd00f170fdf3772c5ebdcd90bf257316c69ba45
   * Has reported hashrate
   * Dashboard example: https://www.sparkpool.com/miner/0x0f5576fa98b03e70213c1fe5c20db810b342eb3b/data?currency=ETH
-* ViaBTC: no miners listing
+* ViaBTC
+  * No miners listing
   * Only average hashrate is available
   * Private dashboard at https://www.viabtc.com/observer/dashboard?access_key=XXX
 
