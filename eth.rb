@@ -265,7 +265,8 @@ class Eth
   def pool_process pool, opts = POOLS[pool]
     data = pool_fetch pool
     return if ENV['DRY']
-    data = if opts.db_parse then data.flat_map{ |d| opts.db_parse.call d } else data end
+    data = data.flat_map{ |d| opts.db_parse.call d } if opts.db_parse
+    data = data.flat_map{ |d| d.slice(*DB[:wallet_reads].columns) }
     DB[:wallet_reads].insert_conflict.multi_insert data
   end
 
