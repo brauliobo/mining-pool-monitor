@@ -211,7 +211,7 @@ class Eth
   def get url, params
     url  = url % params
     puts "GET #{url}" if ENV['DEBUG']
-    data = Mechanize.new.get url
+    data = http.get url
     data = JSON.parse data.body
     data = SymMash.new data if data.is_a? Hash
     data = data.map{ |d| SymMash.new d } if data.is_a? Array
@@ -274,6 +274,13 @@ class Eth
     ds = DB[:wallets_tracked].where(coin: 'eth', pool: pool.to_s)
     ds = ds.where{ (hashrate_last > 0) | (last_read_at >= 24.hours.ago) } unless ENV['RESCRAPE']
     ds.select_map(:wallet)
+  end
+
+  def http
+    @http ||= Mechanize.new do |agent|
+      agent.open_timeout = 15
+      agent.read_timeout = 15
+    end
   end
 
 end

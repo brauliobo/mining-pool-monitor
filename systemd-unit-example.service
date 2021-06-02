@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 User=braulio
-WorkingDirectory=/home/braulio/Projects/mining-pools-monitor
+WorkingDirectory=/home/braulio/Projects/mining-pool-monitor
 ExecStart=/home/braulio/.rvm/wrappers/ruby-2.5.3/ruby bin/bot
 Restart=always
 Environment="TOKEN=X"
