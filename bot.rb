@@ -21,13 +21,18 @@ class TelegramBot
       @bot = bot
 
       Thread.new do
+        db_run 'db/cleanup.sql' if Time.now.hour == 0
+        sleep 59.minutes
+      end
+
+      Thread.new do
         loop do
           if Time.now.min == 0
             @eth.process
             DB.refresh_view :periods_materialized
             send_report SymMash.new chat: {id: ENV['REPORT_CHAT_ID'].to_i}
+            sleep 1.minute
           end
-          db_run 'db/cleanup.sql' if Time.now.hour == 0
 
           # sleep until next minute
           sleep ((DateTime.now.beginning_of_minute + 1.minute - DateTime.now)*1.day).to_i
