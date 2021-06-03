@@ -31,11 +31,10 @@ class TelegramBot
             @eth.process
             DB.refresh_view :periods_materialized
             send_report SymMash.new chat: {id: ENV['REPORT_CHAT_ID'].to_i}
-            sleep 1.minute
           end
 
           # sleep until next minute
-          sleep ((DateTime.now.beginning_of_minute + 1.minute - DateTime.now)*1.day).to_i
+          sleep 1 + ((DateTime.now.beginning_of_minute + 1.minute - DateTime.now)*1.day).to_i
         rescue => e
           puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
         end
