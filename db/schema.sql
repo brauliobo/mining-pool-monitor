@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.2
+-- Dumped from database version 13.3
 -- Dumped by pg_dump version 13.3
 
 SET statement_timeout = 0;
@@ -263,7 +263,7 @@ CREATE VIEW public.periods AS
     to_char(filtered_wallet_pairs.first_read, 'MM/DD HH24:MI'::text) AS "1st read",
     to_char(filtered_wallet_pairs.second_read, 'MM/DD HH24:MI'::text) AS "2nd read"
    FROM public.filtered_wallet_pairs
-  WHERE (((100)::double precision * abs(((filtered_wallet_pairs.second_hashrate / filtered_wallet_pairs.avg_hashrate) - (1)::double precision))) < (5)::double precision);
+  WHERE (((100)::double precision * abs(((filtered_wallet_pairs.second_hashrate / filtered_wallet_pairs.avg_hashrate) - (1)::double precision))) < (10)::double precision);
 
 
 ALTER TABLE public.periods OWNER TO braulio;
@@ -300,6 +300,9 @@ CREATE VIEW public.grouped_periods AS
     pid.wallet,
     id.period,
     percentile_cont((0.5)::double precision) WITHIN GROUP (ORDER BY ((pid.eth_mh_day)::double precision)) AS eth_mh_day,
+    avg(pid."MH") AS hashrate,
+    sum(pid.hours) AS hours,
+    sum(pid.reward) AS reward,
     min(pid.iseq) AS iseq_min,
     max(pid.iseq) AS iseq_max,
     count(DISTINCT pid.iseq) AS iseq_count
@@ -313,6 +316,26 @@ CREATE VIEW public.grouped_periods AS
 ALTER TABLE public.grouped_periods OWNER TO braulio;
 
 --
+-- Name: grouped_rewards; Type: VIEW; Schema: public; Owner: braulio
+--
+
+CREATE VIEW public.grouped_rewards AS
+ SELECT gp.pool,
+    gp.wallet,
+    gp.period,
+    gp.reward,
+    gp.hours,
+    gp.hashrate,
+    gp.iseq_min,
+    gp.iseq_max,
+    gp.iseq_count,
+    avg((((100000)::numeric * ((24)::numeric / gp.hours)) * (gp.reward / gp.hashrate))) OVER (PARTITION BY gp.pool, gp.wallet, gp.period) AS eth_mh_day
+   FROM public.grouped_periods gp;
+
+
+ALTER TABLE public.grouped_rewards OWNER TO braulio;
+
+--
 -- Name: rewards; Type: VIEW; Schema: public; Owner: braulio
 --
 
@@ -320,10 +343,10 @@ CREATE VIEW public.rewards AS
  SELECT b.pool,
     b.wallet,
     b.period,
-    avg(b.eth_mh_day) AS eth_mh_day
+    percentile_cont((0.5)::double precision) WITHIN GROUP (ORDER BY b.eth_mh_day) AS eth_mh_day
    FROM (public.grouped_periods b
      JOIN public.intervals_defs id ON ((id.period = b.period)))
-  WHERE (((b.iseq_max = 1) AND (b.period = 24)) OR ((b.iseq_max >= ((id.seq * 2) / 3)) AND (b.iseq_count >= (id.seq / 2))))
+  WHERE (((b.iseq_max = 1) AND (b.period = 24)) OR (((b.iseq_max)::double precision >= round((((id.seq * 2) / 3))::double precision)) AND ((b.iseq_count)::double precision >= round(((id.seq / 2))::double precision))))
   GROUP BY b.pool, b.wallet, b.period
   ORDER BY b.pool, b.wallet, b.period;
 
