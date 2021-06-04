@@ -23,9 +23,8 @@ class TelegramBot
     Telegram::Bot::Client.run @token, logger: Logger.new(STDOUT) do |bot|
       @bot = bot
 
-      background_loop
-
       puts "bot: started, listening"
+      background_loop
       @bot.listen do |msg|
         Thread.new do
           next unless msg.is_a? Telegram::Bot::Types::Message
@@ -55,8 +54,7 @@ class TelegramBot
   end
 
   def react msg
-    text = msg.text
-    cmd,args = text.match(/^\/(\w+) *(.*)/)&.captures
+    cmd,args = msg.text.match(/^\/(\w+) *(.*)/)&.captures
     return unless cmd
     return unless cmd_def = CMD_LIST[cmd.to_sym]
     if cmd_def.args
