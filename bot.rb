@@ -23,21 +23,7 @@ class TelegramBot
     Telegram::Bot::Client.run @token, logger: Logger.new(STDOUT) do |bot|
       @bot = bot
 
-      Thread.new do
-        loop do
-          if Time.now.min == 0
-            @eth.process
-            DB.refresh_view :periods_materialized
-            send_report SymMash.new chat: {id: REPORT_CHAT_ID}
-          end
-          db_run 'db/cleanup.sql' if Time.now.hour == 0
-
-          # sleep until next hour
-          sleep 1 + ((DateTime.now.beginning_of_hour + 1.hour - DateTime.now)*1.day).to_i
-        rescue => e
-          puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
-        end
-      end
+      background_loop
 
       puts "bot: started, listening"
       @bot.listen do |msg|
@@ -46,6 +32,24 @@ class TelegramBot
           react msg
         end
         Thread.new{ sleep 1 and abort } if @exit # wait for other msg processing and trigger systemd restart
+      end
+    end
+  end
+
+  def background_loop
+    Thread.new do
+      loop do
+        if Time.now.min == 0
+          @eth.process
+          DB.refresh_view :periods_materialized
+          send_report SymMash.new chat: {id: REPORT_CHAT_ID}
+        end
+        db_run 'db/cleanup.sql' if Time.now.hour == 0
+
+        # sleep until next hour
+        sleep 1 + ((DateTime.now.beginning_of_hour + 1.hour - DateTime.now)*1.day).to_i
+      rescue => e
+        puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
       end
     end
   end
