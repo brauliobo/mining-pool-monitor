@@ -4,9 +4,12 @@ require 'tabulo'
 require_relative 'bot/report'
 require_relative 'bot/commands'
 
+Thread.report_on_exception = false
+
 class TelegramBot
 
-  ADMIN_CHAT_ID = ENV['ADMIN_CHAT_ID'].to_i
+  ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID'].to_i
+  REPORT_CHAT_ID = ENV['REPORT_CHAT_ID'].to_i
 
   include Report
   include Commands
@@ -21,20 +24,16 @@ class TelegramBot
       @bot = bot
 
       Thread.new do
-        db_run 'db/cleanup.sql' if Time.now.hour == 0
-        sleep 59.minutes
-      end
-
-      Thread.new do
         loop do
           if Time.now.min == 0
             @eth.process
             DB.refresh_view :periods_materialized
-            send_report SymMash.new chat: {id: ENV['REPORT_CHAT_ID'].to_i}
+            send_report SymMash.new chat: {id: REPORT_CHAT_ID}
           end
+          db_run 'db/cleanup.sql' if Time.now.hour == 0
 
-          # sleep until next minute
-          sleep 1 + ((DateTime.now.beginning_of_minute + 1.minute - DateTime.now)*1.day).to_i
+          # sleep until next hour
+          sleep 1 + ((DateTime.now.beginning_of_hour + 1.hour - DateTime.now)*1.day).to_i
         rescue => e
           puts "error: #{e.message}\n#{e.backtrace.join("\n")}"
         end
@@ -67,9 +66,9 @@ class TelegramBot
   rescue InvalidCommand
     send_message msg, "Incorrect format, usage is:\n#{help_cmd cmd}"
   rescue => e
-    send_message msg, "error: #{e e.message}"
-    STDERR.puts "#{e.message}: #{e.backtrace.join "\n"}"
-    raise
+    error = e "msg: #{msg.inspect}\nerror: #{e.message} #{e.backtrace.join "\n"}"
+    send_message SymMash.new(chat: {id: ADMIN_CHAT_ID}), error
+    STDERR.puts "react error: #{error}"
   end
 
   def from_admin? msg
