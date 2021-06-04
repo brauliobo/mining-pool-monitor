@@ -1,5 +1,18 @@
 class Eth
 
+  def open_ethereum_pool_read i
+    data = get i.api, w: i.wallet
+    avg_hashrate = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6  if data.minerCharts
+    avg_hashrate = data.hashrateHistory.sum(&:hr) / data.hashrateHistory.size / 1.0e6 if data.hashrateHistory
+    hashrate = data.hashrate/1.0e6
+    hashrate = (hashrate + avg_hashrate) / 2 if avg_hashrate
+    SymMash.new(
+      balance:  data.stats.balance / 1.0e9,
+      hashrate: hashrate,
+      average_hashrate: avg_hashrate,
+    )
+  end
+
   POOLS = SymMash.new(
     minerall: {
       url:      'https://minerall.io/minerstats/%{w}',
@@ -63,37 +76,19 @@ class Eth
       },
     },
     zetpool: {
-      url:      'https://eth.zet-tech.eu/#/account/%{w}',
-      api:      'https://eth.zet-tech.eu/api/accounts/%{w}',
-      read:  -> i {
-        data = get i.api, w: i.wallet
-        SymMash.new(
-          balance:  data.stats.balance / 1.0e9,
-          hashrate: data.hashrate / 1.0e6,
-        )
-      },
+      url:  'https://eth.zet-tech.eu/#/account/%{w}',
+      api:  'https://eth.zet-tech.eu/api/accounts/%{w}',
+      read: :open_ethereum_pool_read,
     },
     crazypool: {
-      url:      'https://eth.crazypool.org/#/account/%{w}',
-      api:      'https://eth.crazypool.org/api/accounts/%{w}',
-      read:  -> i {
-        data = get i.api, w: i.wallet
-        SymMash.new(
-          balance:  data.stats.balance / 1.0e9,
-          hashrate: data.hashrate / 1.0e6,
-        )
-      },
+      url:  'https://eth.crazypool.org/#/account/%{w}',
+      api:  'https://eth.crazypool.org/api/accounts/%{w}/chart',
+      read: :open_ethereum_pool_read,
     },
     garimpool: {
       url:  'https://garimpool.com.br/#/account/%{w}',
       api:  'https://garimpool.com.br/api/accounts/%{w}',
-      read: -> i {
-        data = get i.api, w: i.wallet
-        SymMash.new(
-          balance:  data.stats.balance / 1.0e9,
-          hashrate: data.hashrate / 1.0e6,
-        )
-      },
+      read: :open_ethereum_pool_read,
     },
     flexpool: {
       url:      'https://flexpool.io/%{w}',
@@ -122,15 +117,7 @@ class Eth
     '2miners': {
       url:  'https://eth.2miners.com/account/%{w}',
       api:  'https://eth.2miners.com/api/accounts/%{w}',
-      read: -> i {
-        data = get i.api, w: i.wallet
-        avg_hashrate = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6
-        SymMash.new(
-          balance:  data.stats.balance / 1.0e9,
-          hashrate: (data.hashrate/1.0e6 + avg_hashrate) / 2,
-          average_hashrate: avg_hashrate,
-        )
-      },
+      read:  :open_ethereum_pool_read,
     },
     viabtc: {
       url:  'https://www.viabtc.com/observer/dashboard?access_key=%{w}&coin=ETH',
@@ -224,8 +211,7 @@ class Eth
 
   def pool_read pool, wallet
     input = POOLS[pool].merge wallet: wallet
-    data  = instance_exec input, &input.read rescue SymMash.new
-    return puts "#{pool}/#{wallet}: error while fetching data" unless data
+    data  = if input.read.is_a? Symbol then method(input.read).call input else instance_exec input, &input.read end
 
     adata = if data.is_a? Array then data else [data] end
     adata.each do |d|
@@ -242,6 +228,8 @@ class Eth
     Tracked.track adata.first
 
     data
+  rescue => e
+    puts "#{pool}/#{wallet}: #{e.message}"
   end
 
   def high_mh_deviation? v1, v2
