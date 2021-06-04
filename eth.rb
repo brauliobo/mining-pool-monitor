@@ -52,7 +52,7 @@ class Eth
     cruxpool: {
       url:      'https://cruxpool.com/eth/miner/%{w}',
       hashrate: 'https://us3.cruxpool.com/api/eth/miner/%{w}',
-      balance:  ' https://us3.cruxpool.com/api/eth/miner/%{w}/balance',
+      balance:  'https://us3.cruxpool.com/api/eth/miner/%{w}/balance',
       read:  -> i {
         hashrate = get(i.hashrate, w: i.wallet).data
         SymMash.new(
@@ -124,9 +124,11 @@ class Eth
       api:  'https://eth.2miners.com/api/accounts/%{w}',
       read: -> i {
         data = get i.api, w: i.wallet
+        avg_hashrate = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6
         SymMash.new(
           balance:  data.stats.balance / 1.0e9,
-          hashrate: data.hashrate / 1.0e6,
+          hashrate: (data.hashrate/1.0e6 + avg_hashrate) / 2,
+          average_hashrate: avg_hashrate,
         )
       },
     },
