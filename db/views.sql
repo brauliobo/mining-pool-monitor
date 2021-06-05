@@ -31,7 +31,8 @@ from wallet_reads p
 JOIN wallets_tracked pt ON pt.pool = p.pool AND pt.wallet = p.wallet AND pt.hashrate_last > 0 
 join wallet_reads p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
 join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
- and 100*abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1) < 50;
+ and 100*abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1) < 50
+where p.hashrate > 0;
 
 CREATE OR replace VIEW filtered_wallet_pairs as
 select distinct
