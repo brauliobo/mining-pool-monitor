@@ -1,7 +1,7 @@
 class TelegramBot
   module Report
 
-    REPORT_DEFAULT_ORDER = '14d'
+    REPORT_DEFAULT_ORDER = '3w'
 
     def send_report msg, order = nil
       order ||= REPORT_DEFAULT_ORDER
