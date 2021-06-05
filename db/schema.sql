@@ -197,7 +197,8 @@ CREATE VIEW public.wallet_pairs AS
    FROM (((public.wallet_reads p
      JOIN public.wallets_tracked pt ON (((pt.pool = p.pool) AND (pt.wallet = p.wallet) AND (pt.hashrate_last > (0)::double precision))))
      JOIN public.wallet_reads p2 ON (((p2.pool = p.pool) AND (p2.wallet = p.wallet) AND (p2.balance > p.balance))))
-     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))));
+     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))))
+  WHERE (p.hashrate > (0)::double precision);
 
 
 ALTER TABLE public.wallet_pairs OWNER TO braulio;
