@@ -85,6 +85,11 @@ class Eth
       api:  'https://eth.crazypool.org/api/accounts/%{w}/chart',
       read: :open_ethereum_pool_read,
     },
+    besafepool: {
+      url:  'https://beta.besafepool.com/dashboard.html?wallet=%{w}',
+      api:  'https://beta.besafepool.com/api/accounts/%{w}',
+      read: :open_ethereum_pool_read,
+    },
     garimpool: {
       url:  'https://garimpool.com.br/#/account/%{w}',
       api:  'https://garimpool.com.br/api/accounts/%{w}',
