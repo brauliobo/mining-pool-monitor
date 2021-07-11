@@ -178,93 +178,95 @@ CREATE TABLE public.wallets_tracked (
 ALTER TABLE public.wallets_tracked OWNER TO braulio;
 
 --
+-- Name: last_reads; Type: VIEW; Schema: public; Owner: braulio
+--
+
+CREATE VIEW public.last_reads AS
+ SELECT row_number() OVER (PARTITION BY r.pool, r.wallet, i.seq ORDER BY r2.read_at DESC, (abs((((date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision)))) AS "row",
+    r.pool,
+    r.wallet,
+    i.seq AS iseq,
+    24 AS period,
+    (date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) AS hours,
+    r.hashrate AS first_hashrate,
+    r2.hashrate AS second_hashrate,
+    r.balance AS first_balance,
+    r2.balance AS second_balance,
+    r.read_at AS first_read,
+    r2.read_at AS second_read
+   FROM (((public.wallet_reads r
+     JOIN public.wallets_tracked t ON (((t.pool = r.pool) AND (t.wallet = r.wallet) AND (t.hashrate_last > (0)::double precision))))
+     JOIN public.wallet_reads r2 ON (((r2.pool = r.pool) AND (r2.wallet = r.wallet))))
+     JOIN public.intervals i ON ((((r.read_at)::date = i.start_date) AND ((r2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))));
+
+
+ALTER TABLE public.last_reads OWNER TO braulio;
+
+--
+-- Name: wallet_rewards; Type: VIEW; Schema: public; Owner: braulio
+--
+
+CREATE VIEW public.wallet_rewards AS
+ SELECT r.coin,
+    r.pool,
+    r.wallet,
+    r.read_at,
+    r.hashrate,
+    r.balance,
+    (r.balance - lag(r.balance) OVER (PARTITION BY r.pool, r.wallet ORDER BY r.read_at)) AS reward
+   FROM public.wallet_reads r
+  ORDER BY r.pool, r.wallet, r.read_at DESC;
+
+
+ALTER TABLE public.wallet_rewards OWNER TO braulio;
+
+--
 -- Name: wallet_pairs; Type: VIEW; Schema: public; Owner: braulio
 --
 
 CREATE VIEW public.wallet_pairs AS
- SELECT p.pool,
-    p.wallet,
-    i.seq AS iseq,
-    24 AS period,
-    (date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) AS hours,
-    (p2.balance - p.balance) AS reward,
-    p.hashrate AS first_hashrate,
-    p2.hashrate AS second_hashrate,
-    p.balance AS first_balance,
-    p2.balance AS second_balance,
-    p.read_at AS first_read,
-    p2.read_at AS second_read
-   FROM (((public.wallet_reads p
-     JOIN public.wallets_tracked pt ON (((pt.pool = p.pool) AND (pt.wallet = p.wallet) AND (pt.hashrate_last > (0)::double precision))))
-     JOIN public.wallet_reads p2 ON (((p2.pool = p.pool) AND (p2.wallet = p.wallet) AND (p2.balance > p.balance))))
-     JOIN public.intervals i ON ((((p.read_at)::date = i.start_date) AND ((p2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (p2.read_at - p.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))))
-  WHERE (p.hashrate > (0)::double precision);
+ SELECT r."row",
+    r.pool,
+    r.wallet,
+    r.iseq,
+    r.period,
+    r.hours,
+    r.first_hashrate,
+    r.second_hashrate,
+    r.first_balance,
+    r.second_balance,
+    r.first_read,
+    r.second_read,
+    avg(wr.hashrate) AS avg_hashrate,
+    sum(wr.reward) AS reward
+   FROM (public.last_reads r
+     JOIN public.wallet_rewards wr ON (((wr.pool = r.pool) AND (wr.wallet = r.wallet) AND (wr.read_at >= r.first_read) AND (wr.read_at <= r.second_read) AND (wr.reward > (0)::double precision))))
+  WHERE (r."row" = 1)
+  GROUP BY r."row", r.pool, r.wallet, r.iseq, r.period, r.hours, r.first_hashrate, r.second_hashrate, r.first_balance, r.second_balance, r.first_read, r.second_read
+  ORDER BY r.iseq, r.hours DESC, r.second_read DESC;
 
 
 ALTER TABLE public.wallet_pairs OWNER TO braulio;
-
---
--- Name: filtered_wallet_pairs; Type: VIEW; Schema: public; Owner: braulio
---
-
-CREATE VIEW public.filtered_wallet_pairs AS
- SELECT DISTINCT wp."row",
-    wp.pool,
-    wp.wallet,
-    wp.iseq,
-    wp.period,
-    wp.hours,
-    wp.reward,
-    wp.first_hashrate,
-    wp.second_hashrate,
-    wp.first_balance,
-    wp.second_balance,
-    wp.first_read,
-    wp.second_read,
-    avg(wr.hashrate) FILTER (WHERE ((wr.read_at >= wp.first_read) AND (wr.read_at <= wp.second_read))) OVER (PARTITION BY wr.pool, wr.wallet, wp.iseq) AS avg_hashrate
-   FROM (( SELECT row_number() OVER (PARTITION BY wp_1.pool, wp_1.wallet, wp_1.iseq ORDER BY wp_1.second_read DESC,
-                CASE
-                    WHEN (wp_1.first_balance = (0)::double precision) THEN 0
-                    ELSE 1
-                END, (abs(((wp_1.hours / (wp_1.period)::double precision) - (1)::double precision)))) AS "row",
-            wp_1.pool,
-            wp_1.wallet,
-            wp_1.iseq,
-            wp_1.period,
-            wp_1.hours,
-            wp_1.reward,
-            wp_1.first_hashrate,
-            wp_1.second_hashrate,
-            wp_1.first_balance,
-            wp_1.second_balance,
-            wp_1.first_read,
-            wp_1.second_read
-           FROM public.wallet_pairs wp_1) wp
-     JOIN public.wallet_reads wr ON (((wp.pool = wr.pool) AND (wp.wallet = wr.wallet))))
-  WHERE (wp."row" = 1);
-
-
-ALTER TABLE public.filtered_wallet_pairs OWNER TO braulio;
 
 --
 -- Name: periods; Type: VIEW; Schema: public; Owner: braulio
 --
 
 CREATE VIEW public.periods AS
- SELECT filtered_wallet_pairs.pool,
-    filtered_wallet_pairs.wallet,
-    filtered_wallet_pairs.period,
-    filtered_wallet_pairs.iseq,
-    (round(filtered_wallet_pairs.avg_hashrate))::integer AS "MH",
-    round((filtered_wallet_pairs.hours)::numeric, 2) AS hours,
-    round(((((100000)::double precision * ((24)::double precision / filtered_wallet_pairs.hours)) * (filtered_wallet_pairs.reward / filtered_wallet_pairs.avg_hashrate)))::numeric, 2) AS eth_mh_day,
-    round((filtered_wallet_pairs.reward)::numeric, 5) AS reward,
-    round((filtered_wallet_pairs.first_balance)::numeric, 5) AS "1st balance",
-    round((filtered_wallet_pairs.second_balance)::numeric, 5) AS "2nd balance",
-    to_char(filtered_wallet_pairs.first_read, 'MM/DD HH24:MI'::text) AS "1st read",
-    to_char(filtered_wallet_pairs.second_read, 'MM/DD HH24:MI'::text) AS "2nd read"
-   FROM public.filtered_wallet_pairs
-  WHERE (((100)::double precision * abs(((filtered_wallet_pairs.second_hashrate / filtered_wallet_pairs.avg_hashrate) - (1)::double precision))) < (10)::double precision);
+ SELECT wallet_pairs.pool,
+    wallet_pairs.wallet,
+    wallet_pairs.period,
+    wallet_pairs.iseq,
+    (round(wallet_pairs.avg_hashrate))::integer AS "MH",
+    round((wallet_pairs.hours)::numeric, 2) AS hours,
+    round(((((100000)::double precision * ((24)::double precision / wallet_pairs.hours)) * (wallet_pairs.reward / wallet_pairs.avg_hashrate)))::numeric, 2) AS eth_mh_day,
+    round((wallet_pairs.reward)::numeric, 5) AS reward,
+    round((wallet_pairs.first_balance)::numeric, 5) AS "1st balance",
+    round((wallet_pairs.second_balance)::numeric, 5) AS "2nd balance",
+    to_char(wallet_pairs.first_read, 'MM/DD HH24:MI'::text) AS "1st read",
+    to_char(wallet_pairs.second_read, 'MM/DD HH24:MI'::text) AS "2nd read"
+   FROM public.wallet_pairs
+  WHERE (((100)::double precision * abs(((wallet_pairs.second_hashrate / wallet_pairs.avg_hashrate) - (1)::double precision))) < (10)::double precision);
 
 
 ALTER TABLE public.periods OWNER TO braulio;
