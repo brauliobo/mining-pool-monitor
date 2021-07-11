@@ -24,7 +24,7 @@ create or replace view last_reads as
 select
   row_number() over(
     partition by r.pool, r.wallet, i.seq
-    order by r2.read_at DESC
+    order by r2.read_at DESC, abs(extract(epoch from r2.read_at - r.read_at) / 3600 / 24 - 1) asc
   ) as row,
   r.pool,
   r.wallet,
