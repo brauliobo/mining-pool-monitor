@@ -5,10 +5,9 @@ class TelegramBot
 
     def send_report msg, order = nil
       order ||= REPORT_DEFAULT_ORDER
-      suffix  = "The scale is e-5 ETH rewarded/MH/24h. For a 100MH miner multiple it by 100."
-      suffix += "\nTW means the count of tracked wallets. Table ordered by highest #{order} rewards."
-      suffix += "\nMultiple days is the median of sequential 24h rewards."
-      suffix += "\nWallet are read <b>hourly</b> and at least 12 hours of reads is required for 24h period usage."
+      suffix  = "Scale: e-5 ETH rewarded/MH/24h. TW: count of tracked wallets"
+      suffix += "\nOrder: highest #{order} rewards."
+      suffix += "\nMultiple days periods are the median of multiple 24h rewards."
       ds = report_data order
       send_ds msg, ds, suffix: suffix
     end

@@ -11,44 +11,49 @@ order by start_date DESC;
 
 drop view if exists grouped_periods, grouped_rewards, rewards;
 drop materiaLIZED view periods_materialized;
-drop view if exists filtered_wallet_pairs, wallet_pairs, periods;
+drop view if exists wallet_rewards, last_reads, filtered_wallet_pairs, wallet_pairs, periods;
+
+create or replace view wallet_rewards as
+select 
+  r.*,
+  balance - lag(balance) over (partition by r.pool, r.wallet order by r.read_at) as reward
+from wallet_reads r 
+order by r.pool, r.wallet, r.read_at desc;
+
+create or replace view last_reads as
+select
+  row_number() over(
+    partition by r.pool, r.wallet, i.seq
+    order by r2.read_at DESC
+  ) as row,
+  r.pool,
+  r.wallet,
+  i.seq as iseq,
+  24 as period,
+  extract(epoch from r2.read_at - r.read_at) / 3600 as hours,
+  r.hashrate  AS first_hashrate,
+  r2.hashrate AS second_hashrate,
+  r.balance   AS first_balance,
+  r2.balance  AS second_balance,
+  r.read_at   AS first_read,
+  r2.read_at  AS second_read
+from wallet_reads r
+JOIN wallets_tracked t ON t.pool = r.pool AND t.wallet = r.wallet AND t.hashrate_last > 0 
+join wallet_reads r2 on r2.pool = r.pool and r2.wallet = r.wallet 
+join intervals i on r.read_at::date = i.start_date and r2.read_at::date = i.end_date
+ and 100*abs(extract(epoch from r2.read_at - r.read_at) / 3600 / 24 - 1) < 50;
 
 create or replace view wallet_pairs as
 select
-  p.pool,
-  p.wallet,
-  i.seq as iseq,
-  24 as period,
-  extract(epoch from p2.read_at - p.read_at) / 3600 as hours,
-  p2.balance - p.balance as reward,
-  p.hashrate AS first_hashrate,
-  p2.hashrate AS second_hashrate,
-  p.balance  AS first_balance,
-  p2.balance AS second_balance,
-  p.read_at  AS first_read,
-  p2.read_at AS second_read
-from wallet_reads p
-JOIN wallets_tracked pt ON pt.pool = p.pool AND pt.wallet = p.wallet AND pt.hashrate_last > 0 
-join wallet_reads p2 on p2.pool = p.pool and p2.wallet = p.wallet and p2.balance > p.balance
-join intervals i on p.read_at::date = i.start_date and p2.read_at::date = i.end_date
- and 100*abs(extract(epoch from p2.read_at - p.read_at) / 3600 / 24 - 1) < 50
-where p.hashrate > 0;
-
-CREATE OR replace VIEW filtered_wallet_pairs as
-select distinct
-  wp.*,
-  avg(wr.hashrate) filter(where wr.read_at >= wp.first_read AND wr.read_at <= wp.second_read) 
-                     over(partition by wr.pool, wr.wallet, iseq) AS avg_hashrate
-FROM (
-  select
-    row_number() over(
-      partition by wp.pool, wp.wallet, iseq
-      order by second_read desc, CASE WHEN first_balance = 0 THEN 0 ELSE 1 end, abs(hours / period - 1) asc) as row,
-    wp.*
-  from wallet_pairs wp
-) wp
-JOIN wallet_reads wr ON wp.pool = wr.pool AND wp.wallet = wr.wallet
-where wp.row = 1;
+  r.*,
+  avg(wr.hashrate) as avg_hashrate,
+  sum(wr.reward) as reward
+  
+from last_reads r
+join wallet_rewards wr on wr.pool = r.pool and wr.wallet = r.wallet and wr.read_at >= r.first_read and wr.read_at <= r.second_read and reward > 0
+where row = 1
+group by 1,2,3,4,5,6,7,8,9,10,11,12
+order by iseq, hours desc, second_read DESC;
 
 create or replace view periods as
 select
@@ -64,10 +69,10 @@ select
   round(second_balance::numeric, 5) as "2nd balance",
   to_char(first_read, 'MM/DD HH24:MI') as "1st read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
-from filtered_wallet_pairs
+from wallet_pairs
 WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10;
 
-create materiaLIZED view periods_materialized as select * from periods;
+create materialized view periods_materialized as select * from periods;
 
 create or replace view grouped_periods as
    select 
