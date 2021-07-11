@@ -120,10 +120,10 @@ EOS
 
   def send_message msg, text, parse_mode: 'MarkdownV2'
     @bot.api.send_message(
-      reply_to_message: msg,
-      chat_id:          msg.chat.id,
-      text:             if parse_mode == 'MarkdownV2' then me text else text end,
-      parse_mode:       parse_mode,
+      reply_to_message_id: msg.message_id,
+      chat_id:             msg.chat.id,
+      text:                if parse_mode == 'MarkdownV2' then me text else text end,
+      parse_mode:          parse_mode,
     )
   end
 
