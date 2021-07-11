@@ -43,7 +43,6 @@ class TelegramBot
           DB.refresh_view :periods_materialized
           send_report SymMash.new chat: {id: REPORT_CHAT_ID}
         end
-        db_run 'db/cleanup.sql' if Time.now.hour == 0
 
         # sleep until next hour
         sleep 1 + ((DateTime.now.beginning_of_hour + 1.hour - DateTime.now)*1.day).to_i
