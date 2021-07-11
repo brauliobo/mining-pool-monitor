@@ -77,6 +77,7 @@ EOS
       ds = DB[:wallets_tracked]
         .select(*DB[:wallets_tracked].columns.excluding(:coin, :pool, :hashrate_avg_24h, :started_at)) # make it shorter
         .where(pool: p)
+        .where{ hashrate_last > 0 }
         .order(Sequel.desc :last_read_at, nulls: :last)
         .limit(10)
         .offset(off&.to_i)
