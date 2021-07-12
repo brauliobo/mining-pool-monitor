@@ -86,7 +86,7 @@ EOS
 
     def cmd_wallet_rewards msg, w, off
       ds = DB[:periods_materialized]
-        .select(*DB[:periods_materialized].columns.excluding(:pool, :wallet, :period)) # make it shorter
+        .select(*DB[:periods_materialized].columns.excluding(:wallet, :period)) # make it shorter
         .where(Sequel.ilike :wallet, w)
         .order(:iseq)
         .offset(off&.to_i)
