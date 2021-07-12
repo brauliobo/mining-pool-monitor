@@ -72,7 +72,7 @@ create materialized view periods_materialized as select * from periods;
 create or replace view grouped_periods as
 select 
   pid.coin, pid.pool, pid.wallet, id.period,
---    avg(pid.eth_mh_day) AS eth_mh_day,
+  --avg(pid.eth_mh_day) AS eth_mh_day,
   percentile_cont(0.5) WITHIN GROUP (ORDER by pid.eth_mh_day) as eth_mh_day,
   avg(pid."MH") as hashrate,
   sum(pid.hours) as hours,

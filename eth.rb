@@ -178,10 +178,11 @@ class Eth
       url:  'https://eth.nanopool.org/account/%{w}',
       api:  'https://eth.nanopool.org/api/v1/load_account/%{w}',
       read: -> i {
-        data = get(i.api, w: i.wallet).data.userParams
+        data = get(i.api, w: i.wallet).data
         SymMash.new(
-          balance:  data.balance,
-          hashrate: data.reported,
+          balance:  data.userParams.balance,
+          hashrate: data.userParams.reported,
+          average_hashrate: data.avgHashRate.h24.to_f,
         )
       },
     },
