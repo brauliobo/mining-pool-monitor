@@ -36,7 +36,7 @@ select
   r2.read_at  AS second_read
 from wallet_reads r
 JOIN wallets_tracked t ON t.coin = r.coin and t.pool = r.pool AND t.wallet = r.wallet AND t.hashrate_last > 0 
-join wallet_reads r2 on r2.coin = r.coin and r2.pool = r.pool and r2.wallet = r.wallet 
+join wallet_reads r2 on r2.coin = r.coin and r2.pool = r.pool and r2.wallet = r.wallet
 join intervals i on r.read_at::date = i.start_date and r2.read_at::date = i.end_date
  and 100*abs(extract(epoch from r2.read_at - r.read_at) / 3600 / 24 - 1) < 50;
 
@@ -65,7 +65,8 @@ select
   to_char(first_read, 'MM/DD HH24:MI') as "1st read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
 from wallet_pairs
-WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10;
+WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10
+  and avg_hashrate > 0;
 
 create materialized view periods_materialized as select * from periods;
 
