@@ -100,6 +100,8 @@ EOS
         .where(pool: p)
         .where(period: period&.to_i || 24)
         .order(:eth_mh_day)
+      ds = ds.all
+      ds = ds[(ds.size/2-10)..(ds.size/2+10)]
       send_ds msg, ds
     end
 
