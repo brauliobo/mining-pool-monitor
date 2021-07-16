@@ -1,15 +1,32 @@
 module Coin
   class Base
 
+    class_attribute :instances
+    self.instances = SymMash.new
+
     class_attribute :pools
     self.pools = nil
 
-    def name
-      @name ||= self.class.name.demodulize.underscore
+    class_attribute :hr_unit
+    self.hr_unit = 'MH/s'
+
+    def self.name
+      @name ||= super.demodulize.underscore
     end
+    def name
+      @name ||= self.class.name
+    end
+
+    class_attribute :sym
+    self.sym = name.upcase
 
     def self.url pool, wallet
       self.pools[pool].url % {w: wallet}
+    end
+
+    def self.inherited subclass
+      inst = subclass.new
+      instances[inst.name] = inst
     end
 
     def get url, params

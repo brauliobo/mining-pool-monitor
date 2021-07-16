@@ -5,7 +5,7 @@ class TelegramBot
 
     def send_report msg, order = nil
       order ||= REPORT_DEFAULT_ORDER
-      suffix  = "Scale: e-5 ETH rewarded/MH/24h. TW: count of tracked wallets"
+      suffix  = "Scale: e-5 #{coin.sym} rewarded/#{coin.hr_unit}/24h. TW: count of tracked wallets"
       suffix += "\nOrder: highest #{order} rewards."
       suffix += "\nMultiple days periods are the median of multiple 24h rewards."
       ds = report_data order
@@ -17,6 +17,8 @@ class TelegramBot
         .group(:pool)
         .select(:pool)
         .select_append{ count(distinct wallet).as :TW }
+        .where(coin: coin.name)
+
       DB[:intervals_defs].map{ |id| SymMash.new id }.each do |id|
         cond = Sequel.case [[{period: id.period}, :eth_mh_day]], nil
         #ds = ds.select_append{ round(avg(cond), 2).as id.label }

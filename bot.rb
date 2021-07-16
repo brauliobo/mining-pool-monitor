@@ -2,7 +2,7 @@ require 'telegram/bot'
 require 'tabulo'
 
 require_relative 'bot/report'
-require_relative 'bot/commands'
+require_relative 'bot/command'
 
 Thread.report_on_exception = false
 
@@ -11,11 +11,11 @@ class TelegramBot
   ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID'].to_i
   REPORT_CHAT_ID = ENV['REPORT_CHAT_ID'].to_i
 
-  include Report
-  include Commands
+  DEFAULT_COIN = :eth
+  attr_reader :coins
 
   def initialize token
-    @eth   = Coin::Eth.new
+    @coins = Coin::Base.instances
     @token = token
   end
 
@@ -39,9 +39,10 @@ class TelegramBot
     Thread.new do
       loop do
         if Time.now.min == 0
-          @eth.process
+          coins.api_peach{ |c| c.process }
           DB.refresh_view :periods_materialized
-          send_report SymMash.new chat: {id: REPORT_CHAT_ID}
+          msg = SymMash.new chat: {id: REPORT_CHAT_ID}
+          Command.new(self, msg, :report, DEFAULT_COIN).run
         end
 
         # sleep until next hour
@@ -53,23 +54,13 @@ class TelegramBot
   end
 
   def react msg
-    cmd,args = msg.text.match(/^\/(\w+) *(.*)/)&.captures
+    cmd,coin,args = msg.text.match(Command::REGEXP)&.captures
     return unless cmd
-    return unless cmd_def = CMD_LIST[cmd.to_sym]
-    if cmd_def.args
-      args = cmd_def.args.match(args)
-      raise InvalidCommand unless args
-      send "cmd_#{cmd}", msg, *args.captures.map(&:presence)
-    else
-      send "cmd_#{cmd}", msg
-    end
+    cmd,coin = coin,cmd if coin and cmd_def = Command::LIST[coin]
+    coin ||= DEFAULT_COIN
 
-  rescue InvalidCommand
-    send_message msg, "Incorrect format, usage is:\n#{help_cmd cmd}"
-  rescue => e
-    error = e "msg: #{msg.inspect}\nerror: #{e.message} #{e.backtrace.join "\n"}"
-    send_message SymMash.new(chat: {id: ADMIN_CHAT_ID}), error
-    STDERR.puts "react error: #{error}"
+    cmd = Command.new self, msg, cmd, coin, args
+    cmd.run
   end
 
   def from_admin? msg
@@ -100,7 +91,7 @@ class TelegramBot
   end
 
   def help_cmd cmd
-    help = CMD_LIST[cmd].help
+    help = Command::LIST[cmd].help
     return unless help
     help = help.call if help.is_a? Proc
     "*/#{e cmd.to_s}* #{help}"
@@ -111,7 +102,7 @@ class TelegramBot
     help = <<-EOS
 #{non_monitor.map{ |c| help_cmd c }.join("\n")}
 Commands for monitored wallets (first use /track above):
-#{CMD_LIST.keys.excluding(*non_monitor).map{ |c| help_cmd c }.compact.join("\n")}
+#{Command::LIST.keys.excluding(*non_monitor).map{ |c| help_cmd c }.compact.join("\n")}
 
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
 EOS

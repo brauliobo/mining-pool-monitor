@@ -1,6 +1,9 @@
 module Coin
   class Chia < Base
 
+    self.sym     = 'XCH'
+    self.hr_unit = 'TB'
+
     self.pools = SymMash.new(
       flexpool: {
         url:      'https://flexpool.io/miner/xch/%{w}',
