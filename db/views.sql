@@ -55,16 +55,17 @@ order by iseq, hours desc, second_read DESC;
 
 create or replace view periods as
 select
-  coin, pool, wallet, period, iseq,
+  wp.coin, pool, wallet, period, iseq,
   round(avg_hashrate)::integer as "MH",
   round(hours::numeric, 2) as hours,
-  round((100000 * (24 / hours) * (reward / avg_hashrate))::numeric, 2) as eth_mh_day,
+  round((c.multiplier * (24 / hours) * (reward / avg_hashrate))::numeric, 2) as eth_mh_day,
   round(reward::numeric, 5) as reward,
   round(first_balance::numeric, 5) as "1st balance",
   round(second_balance::numeric, 5) as "2nd balance",
   to_char(first_read, 'MM/DD HH24:MI') as "1st read",
   to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
-from wallet_pairs
+from wallet_pairs wp
+JOIN coins c ON c.coin = wp.coin 
 WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10
   and avg_hashrate > 0;
 
