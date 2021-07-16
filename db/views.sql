@@ -35,7 +35,7 @@ select
   r.read_at   AS first_read,
   r2.read_at  AS second_read
 from wallet_reads r
-JOIN wallets_tracked t ON t.coin = r.coin and t.pool = r.pool AND t.wallet = r.wallet AND t.hashrate_last > 0 
+JOIN wallets_tracked t ON t.coin = r.coin and t.pool = r.pool AND t.wallet = r.wallet AND t.hashrate_last > 0 AND t.last_read_at >= now() - '24 hours'::interval
 join wallet_reads r2 on r2.coin = r.coin and r2.pool = r.pool and r2.wallet = r.wallet
 join intervals i on r.read_at::date = i.start_date and r2.read_at::date = i.end_date
  and 100*abs(extract(epoch from r2.read_at - r.read_at) / 3600 / 24 - 1) < 50;
