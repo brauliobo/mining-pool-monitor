@@ -1,5 +1,12 @@
 Sequel.migration do
   change do
+    create_table(:coins) do
+      String :coin, :size=>5, :null=>false
+      Integer :multiplier
+      
+      primary_key [:coin]
+    end
+    
     create_table(:intervals_defs) do
       Integer :period
       String :label, :text=>true
