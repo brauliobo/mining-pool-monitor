@@ -11,7 +11,9 @@ require_relative 'exts/peach'
 require_relative 'db'
 require_relative 'models/wallet_tracked'
 
-require_relative 'eth'
+require_relative 'coin/base'
+require_relative 'coin/eth'
+require_relative 'coin/chia'
 require_relative 'bot'
 require_relative 'tracked'
 

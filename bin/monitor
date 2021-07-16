@@ -2,13 +2,22 @@
 
 require_relative '../monitor'
 
-if ARGV[0].present?
-  Eth.new.pool_process ARGV[0]
+coin  = (ARGV[0].presence || 'eth').camelize.to_sym
+pool  = ARGV[1].presence
+klass = Coin.const_get coin
+inst  = klass.new
+
+if ARGV[0]
+  if pool
+    inst.pool_process pool
+  else
+    inst.process
+  end
   exit
 end
 
 loop do
-  Eth.new.process
+  inst.process
   sleep 60.minutes
 end
 

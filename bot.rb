@@ -15,7 +15,7 @@ class TelegramBot
   include Commands
 
   def initialize token
-    @eth   = Eth.new
+    @eth   = Coin::Eth.new
     @token = token
   end
 
