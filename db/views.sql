@@ -48,7 +48,7 @@ select
   
 from last_reads r
 join wallet_rewards wr on wr.coin = r.coin and wr.pool = r.pool and wr.wallet = r.wallet
- and wr.read_at >= r.first_read and wr.read_at <= r.second_read and reward > 0
+ and wr.read_at >= r.first_read and wr.read_at <= r.second_read and reward > -0.02 -- some pools' balances go down
 where row = 1
 group by 1,2,3,4,5,6,7,8,9,10,11,12,13
 order by iseq, hours desc, second_read DESC;
