@@ -28,6 +28,18 @@ module Coin
       instances[inst.name] = inst
     end
 
+    attr_reader :record
+
+    def initialize
+      @record = SymMash.new DB[:coins].first coin: name
+    end
+
+    delegate :multiplier, to: :record
+
+    def scale
+      "e-#{multiplier.to_s.count '0'}"
+    end
+
     def get url, params
       url  = url % params
       puts "GET #{url}" if ENV['DEBUG']

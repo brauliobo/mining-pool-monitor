@@ -5,7 +5,7 @@ class TelegramBot
 
     def send_report msg, order = nil
       order ||= REPORT_DEFAULT_ORDER
-      suffix  = "Scale: e-5 #{coin.sym} rewarded/#{coin.hr_unit}/24h. TW: count of tracked wallets"
+      suffix  = "Scale: #{coin.scale} #{coin.sym} rewarded/#{coin.hr_unit}/24h. TW: count of tracked wallets"
       suffix += "\nOrder: highest #{order} rewards."
       suffix += "\nMultiple days periods are the median of multiple 24h rewards."
       ds = report_data order
