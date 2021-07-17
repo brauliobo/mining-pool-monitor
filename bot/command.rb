@@ -85,7 +85,7 @@ class TelegramBot
       send_report msg, order
     end
 
-    def cmd_read c, p, w
+    def cmd_read p, w
       data    = coin.pool_read p, w
       data    = data.first if data.is_a? Array
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
