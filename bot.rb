@@ -56,7 +56,7 @@ class TelegramBot
   def react msg
     cmd,coin,args = msg.text.match(Command::REGEXP)&.captures
     return unless cmd
-    cmd,coin = coin,cmd if coin and cmd_def = Command::LIST[coin]
+    cmd,coin = coin,cmd if coin and Command::LIST[coin]
     coin ||= DEFAULT_COIN
 
     cmd = Command.new self, msg, cmd, coin, args

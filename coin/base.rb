@@ -18,7 +18,6 @@ module Coin
     end
 
     class_attribute :sym
-    self.sym = name.upcase
 
     def self.url pool, wallet
       self.pools[pool].url % {w: wallet}

@@ -1,6 +1,8 @@
 module Coin
   class Eth < Base
 
+    self.sym = name.upcase
+
     def open_ethereum_pool_read i
       data = get i.api, w: i.wallet
       avg_hashrate = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6  if data.minerCharts
