@@ -93,7 +93,7 @@ class TelegramBot
       send_message msg, <<-EOS
 #{e Coin::Eth.url p, w}
 *balance*: #{data&.balance} #{coin.sym}
-*hashrate*: #{data&.hashrate} #{coin.hr_unit}/s
+*hashrate*: #{data&.hashrate} #{coin.hr_unit}
 *tracking since*: #{tracked&.started_at || Time.now}
 *last read at*: #{tracked&.last_read_at}
 EOS
