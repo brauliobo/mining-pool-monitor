@@ -39,7 +39,7 @@ class TelegramBot
     Thread.new do
       loop do
         if Time.now.min == 0
-          coins.api_peach{ |c| c.process }
+          coins.api_peach{ |_, c| c.process }
           DB.refresh_view :periods_materialized
           msg = SymMash.new chat: {id: REPORT_CHAT_ID}
           Command.new(self, msg, :report, DEFAULT_COIN).run

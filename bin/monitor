@@ -2,12 +2,11 @@
 
 require_relative '../monitor'
 
-coin  = (ARGV[0].presence || 'eth').camelize.to_sym
-pool  = ARGV[1].presence
-klass = Coin.const_get coin
-inst  = klass.new
-
-if ARGV[0]
+coin = ARGV[0].presence&.camelize&.to_sym
+if coin
+  pool  = ARGV[1].presence
+  klass = Coin.const_get coin
+  inst  = klass.new
   if pool
     inst.pool_process pool
   else
@@ -17,7 +16,7 @@ if ARGV[0]
 end
 
 loop do
-  inst.process
+  Coin::Base.instances.api_peach{ |_, c| c.process }
   sleep 60.minutes
 end
 
