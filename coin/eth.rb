@@ -5,10 +5,13 @@ module Coin
 
     def open_ethereum_pool_read i
       data = get i.api, w: i.wallet
-      avg_hashrate = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6  if data.minerCharts
-      avg_hashrate = data.hashrateHistory.sum(&:hr) / data.hashrateHistory.size / 1.0e6 if data.hashrateHistory
-      hashrate = data.hashrate/1.0e6
-      hashrate = (hashrate + avg_hashrate) / 2 if avg_hashrate
+
+      avg_hashrate   = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6  if data.minerCharts
+      avg_hashrate ||= data.hashrate / 1.0e6
+
+      hashrate = data.totalSubmitHashrate if data.totalSubmitHashrate
+      hashrate = data.workers.sum{ |_, w| if w.reportedHr then w.reportedHr.first / 1.0e6 else 0 end } if data.workers
+
       SymMash.new(
         balance:  data.stats.balance / 1.0e9,
         hashrate: hashrate,

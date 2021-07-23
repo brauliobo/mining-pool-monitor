@@ -53,7 +53,7 @@ module Coin
     end
 
     def high_mh_deviation? v1, v2
-      (v1/v2 - 1).abs > 1
+      100*(v1/v2 - 1).abs >= 30
     end
 
     def pool_read pool, wallet
