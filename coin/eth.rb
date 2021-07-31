@@ -103,12 +103,12 @@ module Coin
       },
       flexpool: {
         url:      'https://flexpool.io/%{w}',
-        balance:  'https://flexpool.io/api/v1/miner/%{w}/balance/',
+        balance:  'https://api.flexpool.io/v2/miner/balance?coin=eth&address=%{w}',
         hashrate: 'https://api.flexpool.io/v2/miner/workers?coin=eth&address=%{w}',
         read: -> i {
           hr = get(i.hashrate, w: i.wallet).result
           SymMash.new(
-            balance:  get(i.balance, w: i.wallet).result / 1.0e18,
+            balance:  get(i.balance, w: i.wallet).result.balance / 1.0e18,
             hashrate: hr.sum(&:reportedHashrate) / 1.0e6,
             average_hashrate: hr.sum(&:averageEffectiveHashrate) / 1.0e6,
           )
