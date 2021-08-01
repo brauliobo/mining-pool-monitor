@@ -67,7 +67,7 @@ select
 from wallet_pairs wp
 JOIN coins c ON c.coin = wp.coin 
 WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10
-  and avg_hashrate > 0;
+  and avg_hashrate > 0 AND reward > 0;
 
 create materialized view periods_materialized as select * from periods;
 
