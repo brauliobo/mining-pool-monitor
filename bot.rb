@@ -3,13 +3,13 @@ require 'tabulo'
 
 require_relative 'bot/report'
 require_relative 'bot/command'
+require_relative 'bot/helpers'
 
 Thread.report_on_exception = false
 
 class TelegramBot
 
-  ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID'].to_i
-  REPORT_CHAT_ID = ENV['REPORT_CHAT_ID'].to_i
+  include Helpers
 
   DEFAULT_COIN = :eth
   attr_reader :coins
@@ -63,10 +63,6 @@ class TelegramBot
     cmd.run
   end
 
-  def from_admin? msg
-    msg.from.id == ADMIN_CHAT_ID
-  end
-
   def db_data ds, aliases: {}, &block
     data = ds.to_a
     return "no data returned" if data.blank?
@@ -90,13 +86,6 @@ class TelegramBot
     send_message msg, text, parse_mode: 'HTML'
   end
 
-  def help_cmd cmd
-    help = Command::LIST[cmd].help
-    return unless help
-    help = help.call if help.is_a? Proc
-    "*/#{e cmd.to_s}* #{help}"
-  end
-
   def send_help msg
     non_monitor = %i[read track]
     help = <<-EOS
@@ -107,25 +96,6 @@ Commands for monitored wallets (first use /track above):
 Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
 EOS
     send_message msg, help
-  end
-
-  def send_message msg, text, parse_mode: 'MarkdownV2'
-    @bot.api.send_message(
-      reply_to_message_id: msg.message_id,
-      chat_id:             msg.chat.id,
-      text:                if parse_mode == 'MarkdownV2' then me text else text end,
-      parse_mode:          parse_mode,
-    )
-  end
-
-  MARKDOWN_RESERVED = %w[[ ] ( ) ~ ` > # + - = | { } . !]
-  def me t
-    MARKDOWN_RESERVED.each{ |c| t = t.gsub c, "\\#{c}" }
-    t
-  end
-  def e t
-    %w[* _].each{ |c| t = t.gsub c, "\\" + c }
-    t
   end
 
 end
