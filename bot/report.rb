@@ -1,4 +1,4 @@
-class TelegramBot
+class Bot
   module Report
 
     REPORT_DEFAULT_ORDER = '3w'

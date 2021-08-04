@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 
-require 'pry'
 require_relative '../monitor'
+require 'pry'
 
 bot = Bot.new ENV['TOKEN']
+Thread.new{ bot.start }
 Pry.start bot
 

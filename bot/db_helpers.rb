@@ -1,4 +1,4 @@
-class TelegramBot
+class Bot
   module DbHelpers
 
     def db_data ds, aliases: {}, &block

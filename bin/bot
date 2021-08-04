@@ -2,5 +2,5 @@
 
 require_relative '../monitor'
 
-bot = TelegramBot.new ENV['TOKEN']
+bot = Bot.new ENV['TOKEN']
 bot.start

@@ -1,4 +1,4 @@
-class TelegramBot
+class Bot
   class Command
 
     class InvalidCommand < StandardError; end

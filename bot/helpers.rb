@@ -1,9 +1,7 @@
-require_relative 'db_helpers'
-
-class TelegramBot
+class Bot
   module Helpers
 
-    include DbHelpers
+    extend ActiveSupport::Concern
 
     ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID'].to_i
     REPORT_CHAT_ID = ENV['REPORT_CHAT_ID'].to_i
@@ -13,7 +11,7 @@ class TelegramBot
     end
 
     def edit_message msg, id, text: nil, type: 'text', **params
-      bot.api.send "edit_message_#{type}",
+      api.send "edit_message_#{type}",
         chat_id: msg.chat.id, message_id: id, text: text, **params
 
     rescue ::Telegram::Bot::Exceptions::ResponseError => e
@@ -32,12 +30,14 @@ class TelegramBot
     def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, **params
       text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then text else text end
       text = text.first 4090
-      resp = SymMash.new @bot.api.send "send_#{type}",
+
+      resp = SymMash.new api.send "send_#{type}",
         reply_to_message_id: msg.message_id,
         chat_id:             msg.chat.id,
         text:                text,
-        parse_mode:          'HTML',
+        parse_mode:          parse_mode,
         **params
+
       delete_message msg, resp.result.message_id, wait: delete if delete
       resp
     end
@@ -56,6 +56,8 @@ class TelegramBot
       error  = "msg: #{he msg_ct}"
       error << "\nerror: <pre>#{he e.message}\n"
       error << "#{he e.backtrace.join "\n"}</pre>"
+
+      STDERR.puts "error: #{error}"
       send_message msg, error, parse_mode: 'HTML', delete: 30.seconds
     end
 
@@ -63,7 +65,7 @@ class TelegramBot
       bot.api
     end
 
-    MARKDOWN_RESERVED = %w[# [ ] ( ) ~ ` > # + - = | { } . !]
+    MARKDOWN_RESERVED = %w[# [ ] ( ) ~ ` # + - = | { } . ! < >]
     def me t
       MARKDOWN_RESERVED.each{ |c| t = t.gsub c, "\\#{c}" }
       t
@@ -73,7 +75,7 @@ class TelegramBot
       CGI::escapeHTML t
     end
     def e t
-      %w[* _].each{ |c| t = t.gsub c, "\\" + c }
+      %w[* _].each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
 

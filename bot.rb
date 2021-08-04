@@ -4,12 +4,16 @@ require 'tabulo'
 require_relative 'bot/report'
 require_relative 'bot/command'
 require_relative 'bot/helpers'
+require_relative 'bot/db_helpers'
 
 Thread.report_on_exception = false
 
-class TelegramBot
+class Bot
+
+  attr_reader :bot
 
   include Helpers
+  include DbHelpers
 
   DEFAULT_COIN = :eth
   attr_reader :coins
