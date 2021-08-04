@@ -10,6 +10,8 @@ class TelegramBot
     LIST   = SymMash.new(
       start:  {},
       help:   {},
+      exec:   {},
+
       report: {
         args: / ?(\w*)/,
       },
@@ -68,17 +70,20 @@ class TelegramBot
     rescue InvalidCommand
       send_message msg, "Incorrect format, usage is:\n#{help_cmd cmd}"
     rescue => e
-      error = e "msg: #{msg.inspect}\nerror: #{e.message} #{e.backtrace.join "\n"}"
-      send_message SymMash.new(chat: {id: bot.class::ADMIN_CHAT_ID}), error
-      STDERR.puts "error: #{error}"
+      report_error msg, e
     end
 
     def cmd_start
       send_help msg
     end
-
     def cmd_help
       send_help msg
+    end
+
+    def cmd_exec **params
+      return unless from_admin? msg
+      delete_message msg, msg.message_id, wait: 60.seconds
+      send_message msg, instance_eval(args).inspect, delete: 30, parse_mode: 'HTML'
     end
 
     def cmd_report order = nil

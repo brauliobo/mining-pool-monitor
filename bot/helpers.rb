@@ -1,5 +1,9 @@
+require_relative 'db_helpers'
+
 class TelegramBot
   module Helpers
+
+    include DbHelpers
 
     ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID'].to_i
     REPORT_CHAT_ID = ENV['REPORT_CHAT_ID'].to_i
@@ -26,13 +30,13 @@ class TelegramBot
     end
 
     def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, **params
-      text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then he text else text end
+      text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then text else text end
       text = text.first 4090
       resp = SymMash.new @bot.api.send "send_#{type}",
         reply_to_message_id: msg.message_id,
         chat_id:             msg.chat.id,
         text:                text,
-        parse_mode:          parse_mode,
+        parse_mode:          'HTML',
         **params
       delete_message msg, resp.result.message_id, wait: delete if delete
       resp
@@ -52,8 +56,7 @@ class TelegramBot
       error  = "msg: #{he msg_ct}"
       error << "\nerror: <pre>#{he e.message}\n"
       error << "#{he e.backtrace.join "\n"}</pre>"
-      resp   = send_message msg, error, parse_mode: 'HTML'
-      delete_message msg, resp.result.message_id
+      send_message msg, error, parse_mode: 'HTML', delete: 30.seconds
     end
 
     def api
