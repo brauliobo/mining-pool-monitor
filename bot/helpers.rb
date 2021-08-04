@@ -27,7 +27,7 @@ class Bot
       "*/#{e cmd.to_s}* #{help}"
     end
 
-    def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, **params
+    def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, delete_both: nil, **params
       text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then text else text end
       text = text.first 4090
 
@@ -38,7 +38,10 @@ class Bot
         parse_mode:          parse_mode,
         **params
 
+      delete = delete_both if delete_both
       delete_message msg, resp.result.message_id, wait: delete if delete
+      delete_message msg, msg.message_id, wait: delete_both if delete_both
+
       resp
     end
 
