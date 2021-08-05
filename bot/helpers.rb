@@ -68,7 +68,7 @@ class Bot
       bot.api
     end
 
-    MARKDOWN_RESERVED = %w[# [ ] ( ) ~ ` # + - = | { } . ! < >]
+    MARKDOWN_RESERVED = %w[\# [ ] ( ) ~ ` # + - = | { } . ! < >]
     def me t
       MARKDOWN_RESERVED.each{ |c| t = t.gsub c, "\\#{c}" }
       t
