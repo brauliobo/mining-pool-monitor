@@ -10,9 +10,13 @@ class Bot
       msg.from.id == ADMIN_CHAT_ID
     end
 
-    def edit_message msg, id, text: nil, type: 'text', **params
+    def edit_message msg, id, text: nil, type: 'text', parse_mode: 'MarkdownV2', **params
       api.send "edit_message_#{type}",
-        chat_id: msg.chat.id, message_id: id, text: text, **params
+        chat_id:    msg.chat.id,
+        message_id: id,
+        text:       parse_text(text, parse_mode: parse_mode),
+        parse_mode: parse_mode,
+        **params
 
     rescue ::Telegram::Bot::Exceptions::ResponseError => e
       resp = SymMash.new JSON.parse e.response.body
@@ -28,13 +32,10 @@ class Bot
     end
 
     def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, delete_both: nil, **params
-      text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then text else text end
-      text = text.first 4090
-
       resp = SymMash.new api.send "send_#{type}",
         reply_to_message_id: msg.message_id,
         chat_id:             msg.chat.id,
-        text:                text,
+        text:                parse_text(text, parse_mode: parse_mode),
         parse_mode:          parse_mode,
         **params
 
@@ -66,6 +67,13 @@ class Bot
 
     def api
       bot.api
+    end
+
+    def parse_text text, parse_mode:
+      return unless text
+      text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then text else text end
+      text = text.first 4090 if text.size > 4096
+      text
     end
 
     MARKDOWN_RESERVED = %w[\# [ ] ( ) ~ ` # + - = | { } . ! < >]
