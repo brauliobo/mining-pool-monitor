@@ -47,6 +47,8 @@ class Bot
 
     attr_reader :bot, :msg, :cmd, :coin, :args
 
+    delegate_missing_to :bot
+
     def initialize bot, msg, cmd, coin, args = ''
       @bot  = bot
       @cmd  = cmd
@@ -172,10 +174,6 @@ EOS
       e = a.size/2 + limit/2
       e = a.size-1 if e >= a.size
       a[s..e]
-    end
-
-    def method_missing method, *args, &block
-      bot.send method, *args, &block
     end
 
   end
