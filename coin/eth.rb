@@ -102,7 +102,7 @@ module Coin
         read: :open_ethereum_pool_read,
       },
       flexpool: {
-        url:      'https://flexpool.io/%{w}',
+        url:      'https://flexpool.io/miner/eth/%{w}',
         balance:  'https://api.flexpool.io/v2/miner/balance?coin=eth&address=%{w}',
         hashrate: 'https://api.flexpool.io/v2/miner/workers?coin=eth&address=%{w}',
         read: -> i {

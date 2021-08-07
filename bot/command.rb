@@ -102,7 +102,7 @@ class Bot
 *tracking since*: #{tracked&.started_at || Time.now}
 *last read at*: #{tracked&.last_read_at}
 EOS
-      send_message msg, text, parse_mode: 'MarkdownV2'
+      send_message msg, text
 
       Tracked.track data rescue nil
     end
