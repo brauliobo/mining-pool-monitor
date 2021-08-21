@@ -2,10 +2,7 @@
 
 require_relative '../monitor'
 
-Bot.define_method :send_message do |msg, text, *args|
-  puts text
-end
-
+Bot.mock
 bot = Bot.new nil
 msg = ARGV[0]
 puts "reacting to message: #{msg}"

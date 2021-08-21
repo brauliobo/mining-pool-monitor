@@ -1,13 +1,13 @@
 [Unit]
 Description=mining_pools_monitor
 After=network-online.target
-Wants=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
 
 [Service]
 User=braulio
 WorkingDirectory=/home/braulio/Projects/mining-pool-monitor
 ExecStart=/home/braulio/.rvm/wrappers/ruby-2.5.3/ruby bin/bot
-Restart=always
+Restart=on-failure
 Environment="TOKEN=X"
 RestartSec=1
 

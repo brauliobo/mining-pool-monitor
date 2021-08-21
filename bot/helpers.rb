@@ -2,19 +2,35 @@ class Bot
   module Helpers
 
     extend ActiveSupport::Concern
+    included do
+      def self.mock
+        define_method :send_message do |msg, text, *args|
+          puts text
+          SymMash.new result: {message_id: 1}, text: text
+        end
+        define_method :edit_message do |msg, id, text: nil, **params|
+        puts text
+        end
+        define_method :delete_message do |msg, id, text: nil, **params|
+        puts "deleting #{id}"
+        end
+      end
+    end
 
-    ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID'].to_i
-    REPORT_CHAT_ID = ENV['REPORT_CHAT_ID'].to_i
+    ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID']&.to_i
+    REPORT_CHAT_ID = ENV['REPORT_CHAT_ID']&.to_i
 
     def from_admin? msg
       msg.from.id == ADMIN_CHAT_ID
     end
 
     def edit_message msg, id, text: nil, type: 'text', parse_mode: 'MarkdownV2', **params
+      text = parse_text text, parse_mode: parse_mode
       api.send "edit_message_#{type}",
         chat_id:    msg.chat.id,
         message_id: id,
-        text:       parse_text(text, parse_mode: parse_mode),
+        text:       text,
+        caption:    text,
         parse_mode: parse_mode,
         **params
 
@@ -32,12 +48,16 @@ class Bot
     end
 
     def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, delete_both: nil, **params
-      resp = SymMash.new api.send "send_#{type}",
+      _text = text
+      text  = parse_text text, parse_mode: parse_mode
+      resp  = SymMash.new api.send "send_#{type}",
         reply_to_message_id: msg.message_id,
         chat_id:             msg.chat.id,
-        text:                parse_text(text, parse_mode: parse_mode),
+        text:                text,
+        caption:             text,
         parse_mode:          parse_mode,
         **params
+      resp.text = _text
 
       delete = delete_both if delete_both
       delete_message msg, resp.result.message_id, wait: delete if delete
@@ -62,7 +82,15 @@ class Bot
       error << "#{he e.backtrace.join "\n"}</pre>"
 
       STDERR.puts "error: #{error}"
-      send_message msg, error, parse_mode: 'HTML', delete: 30.seconds
+      send_message msg, error, parse_mode: 'HTML', delete_both: 1.minutes
+      send_message admin_msg, error, parse_mode: 'HTML' if ADMIN_CHAT_ID != msg.chat.id
+    end
+
+    def fake_msg chat_id
+      SymMash.new chat: {id: chat_id}
+    end
+    def admin_msg
+      fake_msg ADMIN_CHAT_ID
     end
 
     def api

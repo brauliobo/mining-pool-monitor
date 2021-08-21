@@ -27,7 +27,7 @@ class Bot
     Telegram::Bot::Client.run @token, logger: Logger.new(STDOUT) do |bot|
       @bot = bot
 
-      puts "bot: started, listening"
+      puts 'bot: started, listening'
       background_loop
       @bot.listen do |msg|
         Thread.new do
@@ -45,7 +45,7 @@ class Bot
         if Time.now.min == 0
           coins.api_peach{ |_, c| c.process }
           DB.refresh_view :periods_materialized
-          msg = SymMash.new chat: {id: REPORT_CHAT_ID}
+          msg = fake_msg REPORT_CHAT_ID
           Command.new(self, msg, :report, DEFAULT_COIN).run
         end
 
