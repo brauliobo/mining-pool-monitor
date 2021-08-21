@@ -9,10 +9,10 @@ class Bot
           SymMash.new result: {message_id: 1}, text: text
         end
         define_method :edit_message do |msg, id, text: nil, **params|
-        puts text
+          puts text
         end
         define_method :delete_message do |msg, id, text: nil, **params|
-        puts "deleting #{id}"
+          puts "deleting #{id}"
         end
       end
     end
@@ -105,17 +105,19 @@ class Bot
     end
 
     MARKDOWN_RESERVED = %w[\# [ ] ( ) ~ ` # + - = | { } . ! < >]
+    MARKDOWN_FORMAT   = %w[* _]
     def me t
       MARKDOWN_RESERVED.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
+    def e t
+      MARKDOWN_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
+      t
+    end
+
     def he t
       return if t.blank?
       CGI::escapeHTML t
-    end
-    def e t
-      %w[* _].each{ |c| t = t.gsub c, "\\#{c}" }
-      t
     end
 
   end
