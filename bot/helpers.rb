@@ -68,7 +68,7 @@ class Bot
 
     def delete_message msg, id, wait: 30.seconds
       Thread.new do
-        sleep wait
+        sleep wait if wait
       ensure
         api.delete_message chat_id: msg.chat.id, message_id: id
       end

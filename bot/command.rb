@@ -93,12 +93,13 @@ class Bot
     end
 
     def cmd_read p, w
+      p.downcase!; w.downcase!
       data    = coin.pool_read p, w
       data    = data.first if data.is_a? Array
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
 
       text = <<-EOS
-#{Coin::Eth.url p, w}
+#{e Coin::Eth.url p, w}
 *balance*: #{data&.balance} #{coin.sym}
 *hashrate*: #{data&.hashrate} #{coin.hr_unit}
 *tracking since*: #{tracked&.started_at || Time.now}
