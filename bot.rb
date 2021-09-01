@@ -46,7 +46,7 @@ class Bot
           coins.api_peach{ |_, c| c.process }
           DB.refresh_view :periods_materialized
           msg = fake_msg REPORT_CHAT_ID
-          Command.new(self, msg, :report, DEFAULT_COIN).run
+          Command.new(self, msg, :report, DEFAULT_COIN).run keep: true
         end
 
         # sleep until next hour

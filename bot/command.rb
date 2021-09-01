@@ -75,10 +75,10 @@ class Bot
       report_error msg, e
     end
 
-    def cmd_start
+    def cmd_start **params
       send_help msg
     end
-    def cmd_help
+    def cmd_help **params
       send_help msg
     end
 
@@ -88,11 +88,11 @@ class Bot
       send_message msg, instance_eval(args).inspect, delete: 30, parse_mode: 'HTML'
     end
 
-    def cmd_report order = nil, keep: nil
+    def cmd_report order = nil, keep: nil, **params
       send_report msg, order, keep: keep
     end
 
-    def cmd_read p, w
+    def cmd_read p, w, **params
       p.downcase!; w.downcase!
       data    = coin.pool_read p, w
       data    = data.first if data.is_a? Array
@@ -110,11 +110,11 @@ EOS
       Tracked.track data rescue nil
     end
 
-    def cmd_track p, w
+    def cmd_track p, w, **params
       cmd_read p, w
     end
 
-    def cmd_pool_wallets p, off
+    def cmd_pool_wallets p, off, **params
       ds = DB[:wallets_tracked]
         .select(*DB[:wallets_tracked].columns.excluding(:coin, :pool, :hashrate_avg_24h, :started_at)) # make it shorter
         .where(coin: coin.name, pool: p)
@@ -125,7 +125,7 @@ EOS
       send_ds msg, ds
     end
 
-    def cmd_wallet_rewards w, off
+    def cmd_wallet_rewards w, off, **params
       ds = DB[:periods_materialized]
         .select(*DB[:periods_materialized].columns.excluding(:coin, :wallet, :period)) # make it shorter
         .where(Sequel.ilike :wallet, w)
@@ -135,7 +135,7 @@ EOS
       send_ds msg, ds
     end
 
-    def cmd_pool_rewards p, period
+    def cmd_pool_rewards p, period, **params
       ds = DB[:rewards]
         .select(*DB[:rewards].columns.excluding(:pool)) # make it shorter
         .where(coin: coin.name, pool: p)
@@ -145,7 +145,7 @@ EOS
       send_ds msg, ds
     end
 
-    def cmd_wallet_readings w, off
+    def cmd_wallet_readings w, off, **params
       ds = DB[:wallet_reads]
         .select(:pool, :read_at, :hashrate.as(coin.hr_unit), :balance)
         .where(Sequel.ilike :wallet, w)
@@ -155,7 +155,7 @@ EOS
       send_ds msg, ds
     end
 
-    def cmd_pool_readings p, off
+    def cmd_pool_readings p, off, **params
       ds = DB[:wallet_reads]
         .where(coin: coin.name, pool: p)
         .order(Sequel.desc :read_at)
@@ -164,7 +164,7 @@ EOS
       send_ds msg, ds
     end
 
-    def cmd_exit msg
+    def cmd_exit msg, **params
       return unless from_admin? msg
       @exit = true
     end
