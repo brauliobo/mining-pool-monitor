@@ -3,13 +3,13 @@ class Bot
 
     REPORT_DEFAULT_ORDER = '3w'
 
-    def send_report msg, order = nil
+    def send_report msg, order = nil, keep: nil
       order ||= REPORT_DEFAULT_ORDER
       suffix  = "Scale: #{coin.scale} #{coin.sym} rewarded/#{coin.hr_unit}/24h. TW: count of tracked wallets"
       suffix += "\nOrder: highest #{order} rewards."
       suffix += "\nMultiple days periods are the median of multiple 24h rewards."
       ds = report_data order
-      send_ds msg, ds, suffix: suffix, delete_both: (1.minute if report_group? msg)
+      send_ds msg, ds, suffix: suffix, delete_both: (1.minute if !keep and report_group? msg)
     end
 
     def report_data order = nil

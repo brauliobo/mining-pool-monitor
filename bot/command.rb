@@ -57,16 +57,16 @@ class Bot
       @args = args
     end
 
-    def run
+    def run **params
       return unless dec = LIST[cmd.to_sym]
 
       if dec.args
         args = dec.args.match @args
         raise InvalidCommand unless args
         args = args.captures.map(&:presence)
-        send "cmd_#{cmd}", *args
+        send "cmd_#{cmd}", *args, **params
       else
-        send "cmd_#{cmd}"
+        send "cmd_#{cmd}", **params
       end
 
     rescue InvalidCommand
@@ -88,8 +88,8 @@ class Bot
       send_message msg, instance_eval(args).inspect, delete: 30, parse_mode: 'HTML'
     end
 
-    def cmd_report order = nil
-      send_report msg, order
+    def cmd_report order = nil, keep: nil
+      send_report msg, order, keep: keep
     end
 
     def cmd_read p, w
