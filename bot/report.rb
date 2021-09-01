@@ -9,7 +9,7 @@ class Bot
       suffix += "\nOrder: highest #{order} rewards."
       suffix += "\nMultiple days periods are the median of multiple 24h rewards."
       ds = report_data order
-      send_ds msg, ds, suffix: suffix
+      send_ds msg, ds, suffix: suffix, delete_both: (1.minute if report_group? msg)
     end
 
     def report_data order = nil

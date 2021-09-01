@@ -1,7 +1,7 @@
 class Bot
   module DbHelpers
 
-    def db_data ds, aliases: {}, &block
+    def db_data ds, aliases: {}, **params, &block
       data = ds.to_a
       return "no data returned" if data.blank?
       data = ds.map do |p|
@@ -21,7 +21,7 @@ class Bot
       text = "<pre>#{text}</pre>"
       text = "#{prefix}\n#{text}" if prefix
       text = "#{text}\n#{suffix}" if suffix
-      send_message msg, text, parse_mode: 'HTML'
+      send_message msg, text, parse_mode: 'HTML', **params
     end
 
   end

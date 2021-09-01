@@ -23,6 +23,12 @@ class Bot
     def from_admin? msg
       msg.from.id == ADMIN_CHAT_ID
     end
+    def report_group? msg
+      msg.chat.id == REPORT_CHAT_ID
+    end
+    def in_group? msg
+      msg.from.id == msg.chat.id
+    end
 
     def edit_message msg, id, text: nil, type: 'text', parse_mode: 'MarkdownV2', **params
       text = parse_text text, parse_mode: parse_mode
