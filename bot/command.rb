@@ -11,6 +11,7 @@ class Bot
       start:  {},
       help:   {},
       exec:   {},
+      update: {},
 
       report: {
         args: / ?(\w*)/,
@@ -80,6 +81,12 @@ class Bot
     end
     def cmd_help **params
       send_help msg
+    end
+
+    def cmd_update **params
+      delete_message msg, msg.message_id, wait: 1.second
+      return unless from_admin? msg
+      update
     end
 
     def cmd_exec **params

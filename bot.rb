@@ -43,7 +43,9 @@ class Bot
     coins.api_peach{ |_, c| c.process }
     db_run 'db/update.sql'
     msg = fake_msg REPORT_CHAT_ID
-    Command.new(self, msg, :report, DEFAULT_COIN).run keep: true
+    coins.api_peach do |coin, c|
+      Command.new(self, msg, :report, coin).run keep: true
+    end
   end
 
   def background_loop
