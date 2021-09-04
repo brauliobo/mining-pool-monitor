@@ -20,8 +20,8 @@ Sequel.migration do
       DateTime :read_at
       Float :hashrate
       Float :balance
+      String :pair_24h
       
-      index [:pool, :wallet, :balance, :read_at, :hashrate], :name=>:wallet_reads_all_index
       index [:coin, :pool, :wallet, :read_at], :name=>:wallet_reads_unique_constraint, :unique=>true
     end
     
