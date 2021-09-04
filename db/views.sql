@@ -45,8 +45,8 @@ join lateral (
   order by abs(extract(epoch from rs.read_at - rf.read_at) / 3600 / 24 - 1) asc
   limit 1
 ) as rf on true
-where t.hashrate_last > 0 AND t.last_read_at >= now() - '24 hours'::interval ;
---  and (rs.pair_24h->'last')::boolean <> TRUE;
+where t.hashrate_last > 0 AND t.last_read_at >= now() - '24 hours'::interval 
+  and (rs.pair_24h->'last')::boolean is null;
 
 create or replace view pairs_to_update as
 select
@@ -67,10 +67,11 @@ CREATE FUNCTION update_last_readings()  RETURNS INTEGER
 declare
 count integer;
 BEGIN
-  -- reset last values
+  -- reset last 2 of values
   update wallet_reads
-  set pair_24h = json_build_object('{last}', 'null')
-  where (pair_24h->'last')::boolean IS TRUE;
+  set pair_24h = '{}'::jsonb
+  where (pair_24h->'last')::boolean IS TRUE
+    and read_at >= (now() - '1 day'::interval)::date;
 
   -- set new last
   update wallet_reads r
@@ -79,11 +80,6 @@ BEGIN
   where r.coin = p.coin and r.pool = p.pool and r.wallet = p.wallet and r.read_at = p.second_read
     and (pair_24h->'last')::boolean IS NULL;
   GET DIAGNOSTICS count = ROW_COUNT;
-
-  -- set others to false for faster ordered_pairs_to_update
-  update wallet_reads
-  set pair_24h = json_build_object('{last}', 'false')
-  where (pair_24h->'last')::boolean IS NULL;
 
 return count;
 end;
