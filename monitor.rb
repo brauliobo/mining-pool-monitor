@@ -15,6 +15,7 @@ require_relative 'coin/base'
 require_relative 'coin/eth'
 require_relative 'coin/etc'
 require_relative 'coin/ergo'
+require_relative 'coin/rvn'
 require_relative 'coin/chia'
 
 require_relative 'bot'

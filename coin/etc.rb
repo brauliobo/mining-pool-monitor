@@ -3,7 +3,7 @@ module Coin
 
     self.sym = name.upcase
 
-    self.pools = Eth.pools.dup
+    self.pools = Eth.pools.deep_dup
     self.pools.zetpool.url.gsub! 'eth', 'etc'
     self.pools.zetpool.api.gsub! 'eth', 'etc'
     self.pools.crazypool.url.gsub! 'eth', 'etc'

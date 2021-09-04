@@ -3,17 +3,22 @@ module Coin
 
     self.sym = name.upcase
 
+    class_attribute :oep_hscale
+    self.oep_hscale = 1.0e6
+    class_attribute :oep_bscale
+    self.oep_bscale = 1.0e9
+
     def open_ethereum_pool_read i
       data = get i.api, w: i.wallet
 
-      avg_hashrate   = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / 1.0e6  if data.minerCharts
-      avg_hashrate ||= data.hashrate / 1.0e6
+      avg_hashrate   = data.minerCharts.sum(&:minerHash) / data.minerCharts.size / oep_hscale  if data.minerCharts
+      avg_hashrate ||= data.hashrate / oep_hscale
 
       hashrate = data.totalSubmitHashrate if data.totalSubmitHashrate
-      hashrate = data.workers.sum{ |_, w| if w.reportedHr then w.reportedHr.first / 1.0e6 else 0 end } if data.workers
+      hashrate = data.workers.sum{ |_, w| if w.reportedHr then w.reportedHr.first / oep_hscale else 0 end } if data.workers
 
       SymMash.new(
-        balance:  data.stats.balance / 1.0e9,
+        balance:  data.stats.balance / oep_bscale,
         hashrate: hashrate,
         average_hashrate: avg_hashrate,
       )
