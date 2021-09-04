@@ -13,7 +13,7 @@ class Bot
 
       if report_group? msg
         delete = 3.minutes if !keep
-        delete = 1.hour    if  keep and Time.now.hour % 3 == 0
+        delete = 1.hour    if  keep and Time.now.hour % 3 > 0
       end
 
       aliases = {pool: "#{coin.name} pool"}
