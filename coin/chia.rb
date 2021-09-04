@@ -27,6 +27,17 @@ module Coin
           )
         },
       },
+      xchpool: {
+        url: 'https://explorer.xchpool.org/membersearch?singleton=%{w}',
+        api: 'https://api.xchpool.org/v1/members/get?search=%{w}',
+        read: -> i {
+          data = get i.api, w: i.wallet
+          SymMash.new(
+            balance:  data.unpaidBalance.gsub('XCH ', '').to_f,
+            hashrate: data.netspace / 1.0e12,
+          )
+        },
+      },
       corepool: {
         url: 'https://chia.core-pool.com/farmer/%{w}',
         read: -> i {
