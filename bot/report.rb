@@ -7,7 +7,7 @@ class Bot
       order ||= REPORT_DEFAULT_ORDER
       suffix  = "Scale: #{coin.scale} #{coin.sym} rewarded/#{coin.hr_unit}/24h. TW: count of tracked wallets"
       suffix += "\nOrder: highest #{order} rewards."
-      suffix += "\nMultiple days periods are the median of multiple 24h rewards."
+      suffix += "\nMultiple days periods are the average of multiple 24h rewards."
       ds = report_data order
 
       if report_group? msg
