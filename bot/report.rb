@@ -27,8 +27,8 @@ class Bot
 
       DB[:intervals_defs].map{ |id| SymMash.new id }.each do |id|
         cond = Sequel.case [[{period: id.period}, :eth_mh_day]], nil
-        #ds = ds.select_append{ round(avg(cond), 2).as id.label }
-        ds = ds.select_append{ round(Sequel.cast(percentile_cont(0.5).within_group(cond), :numeric), 2).as id.label }
+        ds = ds.select_append{ round(avg(cond), 2).as id.label }
+        #ds = ds.select_append{ round(Sequel.cast(percentile_cont(0.5).within_group(cond), :numeric), 2).as id.label }
       end
 
       data = ds.all.map{ |d| SymMash.new d }
