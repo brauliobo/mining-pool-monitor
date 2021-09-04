@@ -1,7 +1,7 @@
 class Bot
   module Report
 
-    REPORT_DEFAULT_ORDER = '3w'
+    REPORT_DEFAULT_ORDER = '1m'
 
     def send_report msg, order = nil, keep: nil
       order ||= REPORT_DEFAULT_ORDER
