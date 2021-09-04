@@ -111,7 +111,6 @@ create or replace view grouped_periods as
 select
   pid.coin, pid.pool, pid.wallet, id.period,
   avg(pid.eth_mh_day) AS eth_mh_day,
-  --percentile_cont(0.5) WITHIN GROUP (ORDER by pid.eth_mh_day) as eth_mh_day,
   avg(pid."MH") as hashrate,
   sum(pid.hours) as hours,
   sum(pid.reward) as reward,
@@ -128,7 +127,6 @@ create or replace view rewards as
 select
   coin, pool, wallet, b.period,
   avg(eth_mh_day) AS eth_mh_day
-  --percentile_cont(0.5) WITHIN GROUP (ORDER by eth_mh_day) as eth_mh_day
 from grouped_periods b
 join intervals_defs id on id.period = b.period
 -- for multiple periods consider data starting at least on 2/3 and a minimum of half data points
