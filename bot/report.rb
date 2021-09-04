@@ -12,11 +12,12 @@ class Bot
       return if data.blank?
 
       if report_group? msg
-        delete = 3.minutes  if !keep
-        delete = 30.minutes if  keep and Time.now.hour % 3 == 0
+        delete = 3.minutes if !keep
+        delete = 1.hour    if  keep and Time.now.hour % 3 == 0
       end
 
-      send_ds msg, data, suffix: suffix, delete_both: delete
+      aliases = {pool: "#{coin.sym} pool"}
+      send_ds msg, data, suffix: suffix, delete_both: delete, aliases: aliases
     end
 
     def report_data order = nil

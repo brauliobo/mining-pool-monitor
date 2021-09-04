@@ -16,6 +16,28 @@ module Coin
           )
         },
       },
+      spacepool: {
+        url:  'https://pool.space/account/%{w}',
+        api:  'https://pool.space/api/farms/%{w}',
+        read: -> i {
+          data = get i.api, w: i.wallet
+          SymMash.new(
+            balance:  data.unpaidBalanceInXCH,
+            hashrate: data.estimatedPlotSizeTiB,
+          )
+        },
+      },
+      corepool: {
+        url: 'https://chia.core-pool.com/farmer/%{w}',
+        read: -> i {
+          get i.url, w: i.wallet
+          # getting 503 due to cloudflare
+          SymMash.new(
+            balance:  nil,
+            hashrate: nil,
+          )
+        },
+      },
     )
 
   end
