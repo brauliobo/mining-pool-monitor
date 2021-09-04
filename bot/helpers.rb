@@ -88,7 +88,7 @@ class Bot
       error << "#{he e.backtrace.join "\n"}</pre>"
 
       STDERR.puts "error: #{error}"
-      send_message msg, error, parse_mode: 'HTML', delete_both: 1.minutes
+      send_message msg, error, parse_mode: 'HTML', delete_both: 30.seconds
       send_message admin_msg, error, parse_mode: 'HTML' if ADMIN_CHAT_ID != msg.chat.id
     end
 
