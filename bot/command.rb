@@ -100,7 +100,7 @@ class Bot
     end
 
     def cmd_read p, w, **params
-      p.downcase!; w.downcase!
+      p.downcase!
       data    = coin.pool_read p, w
       data    = data.first if data.is_a? Array
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
