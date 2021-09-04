@@ -9,9 +9,8 @@ select
 FROM initial_date, generate_series(initial_date.d, current_date - '1 day'::interval, '1 day'::interval) start_date
 order by start_date DESC;
 
-drop view if exists grouped_periods, grouped_rewards, rewards;
-drop materiaLIZED view periods_materialized;
-drop view if exists wallet_rewards, last_reads, filtered_wallet_pairs, wallet_pairs, periods;
+drop view if exists wallet_rewards cascade;
+DROP materialized view if exists pairs_materialized cascade;
 
 create or replace view wallet_rewards as
 select 
@@ -20,7 +19,7 @@ select
 from wallet_reads r 
 order by r.coin, r.pool, r.wallet, r.read_at desc;
 
-create or replace view last_reads as
+create or replace view ordered_pairs_to_update as
 select
   row_number() over(
     partition by r.coin, r.pool, r.wallet, i.seq
@@ -38,38 +37,70 @@ from wallet_reads r
 JOIN wallets_tracked t ON t.coin = r.coin and t.pool = r.pool AND t.wallet = r.wallet AND t.hashrate_last > 0 AND t.last_read_at >= now() - '24 hours'::interval
 join wallet_reads r2 on r2.coin = r.coin and r2.pool = r.pool and r2.wallet = r.wallet
 join intervals i on r.read_at::date = i.start_date and r2.read_at::date = i.end_date
- and 100*abs(extract(epoch from r2.read_at - r.read_at) / 3600 / 24 - 1) < 50;
+ and 100*abs(extract(epoch from r2.read_at - r.read_at) / 3600 / 24 - 1) < 50
+where (r.pair_24h->'last')::boolean IS NULL;
 
-create or replace view wallet_pairs as
+create or replace view pairs_to_update as
 select
   r.*,
   avg(wr.hashrate) as avg_hashrate,
   sum(wr.reward) as reward
-  
-from last_reads r
+from ordered_pairs_to_update r
 join wallet_rewards wr on wr.coin = r.coin and wr.pool = r.pool and wr.wallet = r.wallet
  and wr.read_at >= r.first_read and wr.read_at <= r.second_read and reward > -0.02 -- some pools' balances go down
-where row = 1
+where row = 1 
 group by 1,2,3,4,5,6,7,8,9,10,11,12,13
 order by iseq, hours desc, second_read DESC;
 
-create or replace view periods as
-select
-  wp.coin, pool, wallet, period, iseq,
-  round(avg_hashrate)::integer as "MH",
-  round(hours::numeric, 2) as hours,
-  round((c.multiplier * (24 / hours) * (reward / avg_hashrate))::numeric, 2) as eth_mh_day,
-  round(reward::numeric, 5) as reward,
-  round(first_balance::numeric, 5) as "1st balance",
-  round(second_balance::numeric, 5) as "2nd balance",
-  to_char(first_read, 'MM/DD HH24:MI') as "1st read",
-  to_char(second_read, 'MM/DD HH24:MI') as "2nd read"
-from wallet_pairs wp
-JOIN coins c ON c.coin = wp.coin 
-WHERE 100*abs(second_hashrate/avg_hashrate - 1) < 10
-  and avg_hashrate > 0 AND reward >= 0;
 
-create materialized view periods_materialized as select * from periods;
+drop function update_last_readings;
+CREATE FUNCTION update_last_readings()  RETURNS INTEGER
+     LANGUAGE plpgsql SECURITY DEFINER AS $$
+declare
+count integer;
+BEGIN
+  -- reset last values
+  update wallet_reads
+  set pair_24h = json_build_object('{last}', 'null')
+  where (pair_24h->'last')::boolean IS TRUE;
+    
+  -- set new last
+  update wallet_reads r     
+  set pair_24h = json_build_object('last', true, 'hours', hours, 'reward', reward, 'avg_hashrate', avg_hashrate, 'hashrate', first_hashrate, 'balance', first_balance, 'read_at', first_read)
+  from (select * from pairs_to_update) p
+  where r.coin = p.coin and r.pool = p.pool and r.wallet = p.wallet and r.read_at = p.second_read and (pair_24h->'last')::boolean IS NULL;
+  GET DIAGNOSTICS count = ROW_COUNT;
+ 
+  -- set others to false for faster ordered_pairs_to_update
+  update wallet_reads
+  set pair_24h = json_build_object('{last}', 'false')
+  where (pair_24h->'last')::boolean IS NULL;
+
+return count;
+end;
+$$;
+    
+SELECT update_last_readings();
+
+create or replace view pairs_parsed as
+select
+  wp.coin, pool, wallet, 24 AS period, i.seq AS iseq,
+  round((pair_24h->'avg_hashrate')::numeric)::integer as "MH",
+  round((pair_24h->'hours')::numeric, 2) as hours,
+  round((c.multiplier * (24 / (pair_24h->'hours')::numeric) * ((pair_24h->'reward')::numeric / (pair_24h->'avg_hashrate')::numeric))::numeric, 2) as eth_mh_day,
+  round((pair_24h->'reward')::numeric, 5) as reward,
+  round((pair_24h->'balance')::numeric, 5) as "1st balance",
+  round(balance::numeric, 5) as "2nd balance",
+  to_char((pair_24h->>'read_at')::timestamp, 'MM/DD HH24:MI') as "1st read",
+  to_char(read_at, 'MM/DD HH24:MI') as "2nd read"
+from wallet_reads wp
+JOIN coins c ON c.coin = wp.coin
+join intervals i on read_at::date = i.end_date
+WHERE (pair_24h->'last')::boolean IS TRUE 
+  AND (pair_24h->'avg_hashrate')::float > 0 AND (pair_24h->'reward')::float >= 0
+  AND 100*abs(hashrate / (pair_24h->'avg_hashrate')::float - 1) < 10;
+
+create materialized view pairs_materialized as select * from pairs_parsed;
 
 create or replace view grouped_periods as
 select 
@@ -82,9 +113,9 @@ select
   min(pid.iseq) as iseq_min,
   max(pid.iseq) as iseq_max,
   count(distinct pid.iseq) as iseq_count
-from periods_materialized p
+from pairs_materialized p
 join intervals_defs id on true
-join periods_materialized pid on pid.coin = p.coin and pid.pool = p.pool and pid.wallet = p.wallet and id.period >= pid.period * pid.iseq
+join pairs_materialized pid on pid.coin = p.coin and pid.pool = p.pool and pid.wallet = p.wallet and id.period >= pid.period * pid.iseq
 group by pid.coin, pid.pool, pid.wallet, id.period
 order by pid.coin, pid.pool, pid.wallet, id.period;
 

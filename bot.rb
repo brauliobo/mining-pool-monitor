@@ -39,15 +39,17 @@ class Bot
     end
   end
 
+  def update
+    coins.api_peach{ |_, c| c.process }
+    db_run 'db/update.sql'
+    msg = fake_msg REPORT_CHAT_ID
+    Command.new(self, msg, :report, DEFAULT_COIN).run keep: true
+  end
+
   def background_loop
     Thread.new do
       loop do
-        if Time.now.min == 0
-          coins.api_peach{ |_, c| c.process }
-          DB.refresh_view :periods_materialized
-          msg = fake_msg REPORT_CHAT_ID
-          Command.new(self, msg, :report, DEFAULT_COIN).run keep: true
-        end
+        update if Time.now.min == 0
 
         # sleep until next hour
         sleep 1 + ((DateTime.now.beginning_of_hour + 1.hour - DateTime.now)*1.day).to_i

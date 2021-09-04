@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require_relative '../monitor'
+require 'pry'
+
+bot = Bot.new ENV['TOKEN']
+bot.update
+
