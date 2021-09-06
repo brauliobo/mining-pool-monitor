@@ -18,9 +18,10 @@ module Coin
         api:  'https://api.woolypooly.com/api/ergo-1/accounts/%{w}',
         read: -> i {
           data = get i.api, w: i.wallet
+          hr   = data.perfomance.pplns.sum{ |p| p.hashrate } / data.perfomance.pplns.size
           SymMash.new(
             balance:  data.stats.balance,
-            hashrate: stats.reportedHashrate.to_i / 1.0e6,
+            hashrate: hr / 1.0e6,
           )
         },
       },
