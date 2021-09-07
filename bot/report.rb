@@ -4,7 +4,6 @@ class Bot
     REPORT_DEFAULT_ORDER = '1m'
 
     def send_report msg, order = nil, keep: nil
-      oc ||= REPORT_DEFAULT_ORDER
       suffix  = "Scale: #{coin.scale} #{coin.sym} rewarded/#{coin.hr_unit}/24h."
       suffix += "\nTW: count of tracked wallets."
 
@@ -20,7 +19,8 @@ class Bot
       data = ds.all.map{ |d| SymMash.new d }
       return if data.blank?
 
-      oc   = oc.to_sym if oc
+      oc   = order || REPORT_DEFAULT_ORDER
+      oc   = oc.to_sym
       oc   = REPORT_DEFAULT_ORDER unless oc.in? data.first.keys
       data = data.sort{ |a,b| if a[oc] && b[oc] then b[oc] <=> a[oc] elsif a[oc] then -1 else 1 end }
       data.each.with_index do |d, i|
