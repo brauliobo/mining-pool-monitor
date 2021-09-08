@@ -32,7 +32,7 @@ class Bot
         delete = 1.hour    if  keep and Time.now.hour % 3 > 0
       end
 
-      aliases = {pool: "#{coin.name} pool", oc => "*#{oc}"}
+      aliases = {pool: "#{coin.name} pool", oc => "↓#{oc}"}
       send_ds msg, data, suffix: suffix, delete_both: delete, aliases: aliases
     end
 
