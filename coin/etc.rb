@@ -9,5 +9,10 @@ module Coin
     self.pools.crazypool.url.gsub! 'eth', 'etc'
     self.pools.crazypool.api.gsub! 'eth', 'etc'
 
+    self.pools.flypool = Eth.pools.ethermine.merge(
+      url:  'https://etc.ethermine.org/miners/%{w}',
+      api:  'https://api-etc.ethermine.org/miner/%{w}/dashboard',
+    )
+
   end
 end
