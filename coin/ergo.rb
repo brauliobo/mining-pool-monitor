@@ -38,5 +38,17 @@ module Coin
       },
     )
 
+    self.pools.flypool = SymMash.new(
+      url: 'https://ergo.flypool.org/miners/%{w}/dashboard',
+      api: 'https://api-ergo.flypool.org/miner/%{w}/dashboard',
+      read: -> i {
+        data = get(i.api, w: i.wallet).data
+        SymMash.new(
+          balance:  data.currentStatistics.unpaid / 1.0e9,
+          hashrate: data.currentStatistics.currentHashrate / 1.0e6,
+        )
+      },
+    )
+
   end
 end
