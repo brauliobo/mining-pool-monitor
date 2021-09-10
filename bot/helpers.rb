@@ -46,13 +46,6 @@ class Bot
       raise
     end
 
-    def help_cmd cmd
-      help = Command::LIST[cmd].help
-      return unless help
-      help = help.call if help.is_a? Proc
-      "*/#{e cmd.to_s}* #{help}"
-    end
-
     def send_message msg, text, type: 'message', parse_mode: 'MarkdownV2', delete: nil, delete_both: nil, **params
       _text = text
       text  = parse_text text, parse_mode: parse_mode
