@@ -90,22 +90,19 @@ CREATE FUNCTION public.update_last_readings() RETURNS integer
 declare
 count integer;
 BEGIN
-  -- reset last values
+  -- reset last 2 of values
   update wallet_reads
-  set pair_24h = json_build_object('{last}', 'null')
-  where (pair_24h->'last')::boolean IS TRUE;
-    
+  set pair_24h = '{}'::jsonb
+  where (pair_24h->'last')::boolean IS TRUE
+    and read_at >= (now() - '1 day'::interval)::date;
+
   -- set new last
-  update wallet_reads r     
+  update wallet_reads r
   set pair_24h = json_build_object('last', true, 'hours', hours, 'reward', reward, 'avg_hashrate', avg_hashrate, 'hashrate', first_hashrate, 'balance', first_balance, 'read_at', first_read)
   from (select * from pairs_to_update) p
-  where r.coin = p.coin and r.pool = p.pool and r.wallet = p.wallet and r.read_at = p.second_read and (pair_24h->'last')::boolean IS NULL;
+  where r.coin = p.coin and r.pool = p.pool and r.wallet = p.wallet and r.read_at = p.second_read
+    and (pair_24h->'last')::boolean IS NULL;
   GET DIAGNOSTICS count = ROW_COUNT;
- 
-  -- set others to false for faster ordered_pairs_to_update
-  update wallet_reads
-  set pair_24h = json_build_object('{last}', 'false')
-  where (pair_24h->'last')::boolean IS NULL;
 
 return count;
 end;
@@ -266,7 +263,7 @@ CREATE VIEW public.grouped_periods AS
     pid.pool,
     pid.wallet,
     id.period,
-    percentile_cont((0.5)::double precision) WITHIN GROUP (ORDER BY ((pid.eth_mh_day)::double precision)) AS eth_mh_day,
+    avg(pid.eth_mh_day) AS eth_mh_day,
     avg(pid."MH") AS hashrate,
     sum(pid.hours) AS hours,
     sum(pid.reward) AS reward,
@@ -300,30 +297,50 @@ CREATE TABLE public.wallets_tracked (
 ALTER TABLE public.wallets_tracked OWNER TO braulio;
 
 --
--- Name: last_reads; Type: VIEW; Schema: public; Owner: braulio
+-- Name: last_pairs_to_update; Type: VIEW; Schema: public; Owner: braulio
 --
 
-CREATE VIEW public.last_reads AS
- SELECT row_number() OVER (PARTITION BY r.coin, r.pool, r.wallet, i.seq ORDER BY r2.read_at DESC, (abs((((date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision)))) AS "row",
-    r.coin,
-    r.pool,
-    r.wallet,
+CREATE VIEW public.last_pairs_to_update AS
+ SELECT rs.coin,
+    rs.pool,
+    rs.wallet,
     24 AS period,
     i.seq AS iseq,
-    (date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) AS hours,
-    r.hashrate AS first_hashrate,
-    r2.hashrate AS second_hashrate,
-    r.balance AS first_balance,
-    r2.balance AS second_balance,
-    r.read_at AS first_read,
-    r2.read_at AS second_read
-   FROM (((public.wallet_reads r
-     JOIN public.wallets_tracked t ON (((t.coin = r.coin) AND (t.pool = r.pool) AND (t.wallet = r.wallet) AND (t.hashrate_last > (0)::double precision) AND (t.last_read_at >= (now() - '24:00:00'::interval)))))
-     JOIN public.wallet_reads r2 ON (((r2.coin = r.coin) AND (r2.pool = r.pool) AND (r2.wallet = r.wallet))))
-     JOIN public.intervals i ON ((((r.read_at)::date = i.start_date) AND ((r2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))));
+    (date_part('epoch'::text, (rs.read_at - rf.read_at)) / (3600)::double precision) AS hours,
+    rf.hashrate AS first_hashrate,
+    rs.hashrate AS second_hashrate,
+    rf.balance AS first_balance,
+    rs.balance AS second_balance,
+    rf.read_at AS first_read,
+    rs.read_at AS second_read
+   FROM public.wallets_tracked t,
+    ((public.intervals i
+     JOIN LATERAL ( SELECT rs_1.coin,
+            rs_1.pool,
+            rs_1.wallet,
+            rs_1.read_at,
+            rs_1.hashrate,
+            rs_1.balance,
+            rs_1.pair_24h
+           FROM public.wallet_reads rs_1
+          WHERE ((t.coin = rs_1.coin) AND (t.pool = rs_1.pool) AND (t.wallet = rs_1.wallet) AND ((rs_1.read_at)::date = i.end_date) AND (rs_1.balance > (0)::double precision))
+          ORDER BY rs_1.read_at DESC
+         LIMIT 1) rs ON (true))
+     JOIN LATERAL ( SELECT rf_1.coin,
+            rf_1.pool,
+            rf_1.wallet,
+            rf_1.read_at,
+            rf_1.hashrate,
+            rf_1.balance,
+            rf_1.pair_24h
+           FROM public.wallet_reads rf_1
+          WHERE ((rf_1.coin = rs.coin) AND (rf_1.pool = rs.pool) AND (rf_1.wallet = rs.wallet) AND ((rf_1.read_at)::date = i.start_date) AND (rf_1.balance > (0)::double precision))
+          ORDER BY (abs((((date_part('epoch'::text, (rs.read_at - rf_1.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision)))
+         LIMIT 1) rf ON (true))
+  WHERE ((t.hashrate_last > (0)::double precision) AND (t.last_read_at >= (now() - '24:00:00'::interval)) AND (((rs.pair_24h -> 'last'::text))::boolean IS NULL));
 
 
-ALTER TABLE public.last_reads OWNER TO braulio;
+ALTER TABLE public.last_pairs_to_update OWNER TO braulio;
 
 --
 -- Name: ordered_pairs_to_update; Type: VIEW; Schema: public; Owner: braulio
@@ -347,7 +364,7 @@ CREATE VIEW public.ordered_pairs_to_update AS
      JOIN public.wallets_tracked t ON (((t.coin = r.coin) AND (t.pool = r.pool) AND (t.wallet = r.wallet) AND (t.hashrate_last > (0)::double precision) AND (t.last_read_at >= (now() - '24:00:00'::interval)))))
      JOIN public.wallet_reads r2 ON (((r2.coin = r.coin) AND (r2.pool = r.pool) AND (r2.wallet = r.wallet))))
      JOIN public.intervals i ON ((((r.read_at)::date = i.start_date) AND ((r2.read_at)::date = i.end_date) AND (((100)::double precision * abs((((date_part('epoch'::text, (r2.read_at - r.read_at)) / (3600)::double precision) / (24)::double precision) - (1)::double precision))) < (50)::double precision))))
-  WHERE (((r.pair_24h -> 'last'::text))::boolean IS NULL);
+  WHERE (((r2.pair_24h -> 'last'::text))::boolean IS NULL);
 
 
 ALTER TABLE public.ordered_pairs_to_update OWNER TO braulio;
@@ -366,6 +383,7 @@ CREATE VIEW public.wallet_rewards AS
     r.pair_24h,
     (r.balance - lag(r.balance) OVER (PARTITION BY r.pool, r.wallet ORDER BY r.read_at)) AS reward
    FROM public.wallet_reads r
+  WHERE (r.balance >= (0)::double precision)
   ORDER BY r.coin, r.pool, r.wallet, r.read_at DESC;
 
 
@@ -376,8 +394,7 @@ ALTER TABLE public.wallet_rewards OWNER TO braulio;
 --
 
 CREATE VIEW public.pairs_to_update AS
- SELECT r."row",
-    r.coin,
+ SELECT r.coin,
     r.pool,
     r.wallet,
     r.period,
@@ -391,10 +408,9 @@ CREATE VIEW public.pairs_to_update AS
     r.second_read,
     avg(wr.hashrate) AS avg_hashrate,
     sum(wr.reward) AS reward
-   FROM (public.ordered_pairs_to_update r
+   FROM (public.last_pairs_to_update r
      JOIN public.wallet_rewards wr ON (((wr.coin = r.coin) AND (wr.pool = r.pool) AND (wr.wallet = r.wallet) AND (wr.read_at >= r.first_read) AND (wr.read_at <= r.second_read) AND (wr.reward > ('-0.02'::numeric)::double precision))))
-  WHERE (r."row" = 1)
-  GROUP BY r."row", r.coin, r.pool, r.wallet, r.period, r.iseq, r.hours, r.first_hashrate, r.second_hashrate, r.first_balance, r.second_balance, r.first_read, r.second_read
+  GROUP BY r.coin, r.pool, r.wallet, r.period, r.iseq, r.hours, r.first_hashrate, r.second_hashrate, r.first_balance, r.second_balance, r.first_read, r.second_read
   ORDER BY r.iseq, r.hours DESC, r.second_read DESC;
 
 
@@ -409,7 +425,7 @@ CREATE VIEW public.rewards AS
     b.pool,
     b.wallet,
     b.period,
-    percentile_cont((0.5)::double precision) WITHIN GROUP (ORDER BY b.eth_mh_day) AS eth_mh_day
+    avg(b.eth_mh_day) AS eth_mh_day
    FROM (public.grouped_periods b
      JOIN public.intervals_defs id ON ((id.period = b.period)))
   WHERE (((b.iseq_max = 1) AND (b.period = 24)) OR (((b.iseq_max)::double precision >= round((((id.seq * 2) / 3))::double precision)) AND ((b.iseq_count)::double precision >= round(((id.seq / 2))::double precision))))
@@ -463,6 +479,8 @@ CREATE INDEX wallet_reads_all_index ON public.wallet_reads USING btree (coin, po
 --
 
 CREATE INDEX wallet_reads_to_update_index ON public.wallet_reads USING btree (coin, pool, wallet, (((pair_24h -> 'last'::text))::boolean), read_at, balance, hashrate);
+
+ALTER TABLE public.wallet_reads CLUSTER ON wallet_reads_to_update_index;
 
 
 --
