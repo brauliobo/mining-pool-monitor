@@ -90,8 +90,8 @@ class Bot
     end
 
     def cmd_exec **params
-      return unless from_admin? msg
       delete_message msg, msg.message_id, wait: 60.seconds
+      return unless from_admin? msg
       send_message msg, instance_eval(args).inspect, delete: 30, parse_mode: 'HTML'
     end
 

@@ -1,7 +1,7 @@
 require 'active_support/all'
 require 'sequel'
 
-DB = Sequel.connect adapter: 'postgres', database: 'mining_pools'
+DB = Sequel.connect adapter: 'postgres', database: 'mining_pools', max_connections: 5
 
 Sequel.split_symbols = true
 Sequel.extension :core_extensions
