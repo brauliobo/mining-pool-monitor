@@ -110,8 +110,8 @@ class Bot
       text
     end
 
-    MARKDOWN_RESERVED = %w[\# [ ] ( ) ~ ` # + - = | { } . ! < >]
-    MARKDOWN_FORMAT   = %w[* _]
+    MARKDOWN_RESERVED = %w[\# [ ] ( ) ~ # + - = | { } . ! < >]
+    MARKDOWN_FORMAT   = %w[* _ `]
     def me t
       MARKDOWN_RESERVED.each{ |c| t = t.gsub c, "\\#{c}" }
       t
