@@ -3,6 +3,9 @@ class Bot
 
     extend ActiveSupport::Concern
     included do
+      class_attribute :error_delete_time
+      self.error_delete_time = 30.seconds
+
       def self.mock
         define_method :send_message do |msg, text, *args|
           puts text
@@ -70,6 +73,9 @@ class Bot
       delete_message msg, msg.message_id, wait: delete_both if delete_both
 
       resp
+    rescue => e
+      binding.pry if ENV['PRY_SEND_MESSAGE']
+      raise
     end
 
     def delete_message msg, id, wait: 30.seconds
@@ -80,15 +86,16 @@ class Bot
       end
     end
 
-    def report_error msg, e
+    def report_error msg, e, context: nil
       return unless msg
       msg_ct = if msg.respond_to? :text then msg.text else msg.data end
-      error  = "msg: #{he msg_ct}"
-      error << "\nerror: <pre>#{he e.message}\n"
+      error  = "<b>msg</b>: #{he msg_ct}"
+      error << "\n\n<b>context</b>: #{he context}" if context
+      error << "\n\n<b>error</b>: <pre>#{he e.message}\n"
       error << "#{he e.backtrace.join "\n"}</pre>"
 
       STDERR.puts "error: #{error}"
-      send_message msg, error, parse_mode: 'HTML', delete_both: 30.seconds
+      send_message msg, error, parse_mode: 'HTML', delete_both: error_delete_time
       send_message admin_msg, error, parse_mode: 'HTML' if ADMIN_CHAT_ID != msg.chat.id
     end
 
