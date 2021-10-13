@@ -89,7 +89,7 @@ SELECT update_last_readings();
 
 create or replace view pairs_parsed as
 select
-  wp.coin, pool, wallet, 24 AS period, i.seq AS iseq,
+  wp.coin, wp.pool, wp.wallet, 24 AS period, i.seq AS iseq,
   round((pair_24h->'avg_hashrate')::numeric)::integer as "MH",
   round((pair_24h->'hours')::numeric, 2) as hours,
   round((c.multiplier * (24 / (pair_24h->'hours')::numeric) * ((pair_24h->'reward')::numeric / (pair_24h->'avg_hashrate')::numeric))::numeric, 2) as eth_mh_day,
@@ -98,10 +98,12 @@ select
   round(balance::numeric, 5) as "2nd balance",
   to_char((pair_24h->>'read_at')::timestamp, 'MM/DD HH24:MI') as "1st read",
   to_char(read_at, 'MM/DD HH24:MI') as "2nd read"
-from wallet_reads wp
+from wallets_tracked t
+join wallet_reads wp on wp.coin = t.coin and wp.pool = t.pool and wp.wallet = t.wallet
 JOIN coins c ON c.coin = wp.coin
 join intervals i on read_at::date = i.end_date
-WHERE (pair_24h->'last')::boolean IS TRUE
+where t.hashrate_last > 0 AND t.last_read_at >= now() - '24 hours'::interval 
+  AND (pair_24h->'last')::boolean IS TRUE
   AND (pair_24h->'avg_hashrate')::float > 0 AND (pair_24h->'reward')::float >= 0
   AND 100*abs(hashrate / (pair_24h->'avg_hashrate')::float - 1) < 10;
 
