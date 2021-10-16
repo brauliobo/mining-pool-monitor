@@ -7,9 +7,10 @@ Wants=network-online.target systemd-networkd-wait-online.service
 User=braulio
 WorkingDirectory=/home/braulio/Projects/mining-pool-monitor
 ExecStart=/home/braulio/.rvm/wrappers/ruby-2.5.3/ruby bin/bot
-Restart=on-failure
 Environment="TOKEN=X"
+Restart=always
 RestartSec=1
+StartLimitInterval=0
 
 [Install]
 WantedBy=multi-user.target
