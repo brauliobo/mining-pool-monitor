@@ -136,7 +136,7 @@ EOS
       ds = DB[:pairs_materialized]
         .select(*DB[:pairs_materialized].columns.excluding(:coin, :wallet, :period)) # make it shorter
         .where(Sequel.ilike :wallet, w)
-        .order(:iseq)
+        .order(:iseq, Sequel.asc(:pool))
         .offset(off&.to_i)
         .limit(10)
       send_ds msg, ds
@@ -156,7 +156,7 @@ EOS
       ds = DB[:wallet_reads]
         .select(:pool, :read_at, :hashrate.as(coin.hr_unit), :balance)
         .where(Sequel.ilike :wallet, w)
-        .order(Sequel.desc :read_at)
+        .order(Sequel.desc(:read_at), Sequel.asc(:pool))
         .offset(off&.to_i)
         .limit(20)
       send_ds msg, ds
