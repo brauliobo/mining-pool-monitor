@@ -13,7 +13,7 @@ class Bot
         .select_append{ count(distinct wallet).as :TW }
         .where(coin: coin.name)
       DB[:intervals_defs].map{ |id| SymMash.new id }.each do |id|
-        cond = Sequel.case [[{period: id.period}, :eth_mh_day]], nil
+        cond = Sequel.case [[{period: id.period}, :rew_mh_day]], nil
         ds = ds.select_append{ round(avg(cond), 2).as id.label }
       end
       data = ds.all.map{ |d| SymMash.new d }

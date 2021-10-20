@@ -11,6 +11,7 @@ order by start_date DESC;
 
 drop view if exists wallet_rewards cascade;
 DROP materialized view if exists pairs_materialized cascade;
+DROP materialized view if exists pairs_parsed cascade;
 
 create or replace view wallet_rewards as
 select
@@ -92,7 +93,7 @@ select
   wp.coin, wp.pool, wp.wallet, 24 AS period, i.seq AS iseq,
   round((pair_24h->'avg_hashrate')::numeric)::integer as "MH",
   round((pair_24h->'hours')::numeric, 2) as hours,
-  round((c.multiplier * (24 / (pair_24h->'hours')::numeric) * ((pair_24h->'reward')::numeric / (pair_24h->'avg_hashrate')::numeric))::numeric, 2) as eth_mh_day,
+  round((c.multiplier * (24 / (pair_24h->'hours')::numeric) * ((pair_24h->'reward')::numeric / (pair_24h->'avg_hashrate')::numeric))::numeric, 2) as rew_mh_day,
   round((pair_24h->'reward')::numeric, 5) as reward,
   round((pair_24h->'balance')::numeric, 5) as "1st balance",
   round(balance::numeric, 5) as "2nd balance",
@@ -112,7 +113,7 @@ create materialized view pairs_materialized as select * from pairs_parsed;
 create or replace view grouped_periods as
 select
   pid.coin, pid.pool, pid.wallet, id.period,
-  avg(pid.eth_mh_day) AS eth_mh_day,
+  avg(pid.rew_mh_day) AS rew_mh_day,
   avg(pid."MH") as hashrate,
   sum(pid.hours) as hours,
   sum(pid.reward) as reward,
@@ -128,7 +129,7 @@ order by pid.coin, pid.pool, pid.wallet, id.period;
 create or replace view rewards as
 select
   coin, pool, wallet, b.period,
-  avg(eth_mh_day) AS eth_mh_day
+  avg(rew_mh_day) AS rew_mh_day
 from grouped_periods b
 join intervals_defs id on id.period = b.period
 -- for multiple periods consider data starting at least on 2/3 and a minimum of half data points

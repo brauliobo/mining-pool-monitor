@@ -147,7 +147,7 @@ EOS
         .select(*DB[:rewards].columns.excluding(:pool)) # make it shorter
         .where(coin: coin.name, pool: p)
         .where(period: period&.to_i || 24)
-        .order(:eth_mh_day)
+        .order(:rew_mh_day)
       ds = array_middle ds.all
       send_ds msg, ds
     end
