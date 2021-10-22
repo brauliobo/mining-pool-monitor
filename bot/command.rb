@@ -164,6 +164,7 @@ EOS
 
     def cmd_pool_readings p, off, **params
       ds = DB[:wallet_reads]
+        .select(:pool, :read_at, :hashrate.as(coin.hr_unit), :balance)
         .where(coin: coin.name, pool: p)
         .order(Sequel.desc :read_at)
         .offset(off&.to_i)
