@@ -71,7 +71,7 @@ class Bot
       end
 
     rescue InvalidCommand
-      send_message msg, "Incorrect format, usage is:\n#{help_cmd cmd}"
+      send_message msg, "Incorrect format, usage is:\n#{mnfe help_cmd cmd}"
     rescue => e
       report_error msg, e
     end
@@ -92,7 +92,8 @@ class Bot
     def cmd_exec **params
       delete_message msg, msg.message_id, wait: 60.seconds
       return unless from_admin? msg
-      send_message msg, instance_eval(args).inspect, delete: 30, parse_mode: 'HTML'
+      ret = instance_eval(args).inspect
+      send_message msg, ret, delete: 30, parse_mode: 'HTML'
     end
 
     def cmd_report order = nil, keep: nil, **params
@@ -106,13 +107,13 @@ class Bot
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
 
       text = <<-EOS
-#{e coin.class.url p, w}
+#{coin.class.url p, w}
 *balance*: #{data&.balance} #{coin.sym}
 *hashrate*: #{data&.hashrate} #{coin.hr_unit}
 *tracking since*: #{tracked&.started_at || Time.now}
 *last read at*: #{tracked&.last_read_at}
 EOS
-      send_message msg, text
+      send_message msg, mnfe(text)
 
       Tracked.track data rescue nil
     end

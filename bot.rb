@@ -82,16 +82,16 @@ Coins supported:
 Commands for monitored wallets (first use /track above):
 #{Command::LIST.keys.excluding(*non_monitor).map{ |c| help_cmd c }.compact.join("\n")}
 
-Hourly reports at #{e 'https://t.me/mining_pools_monitor'}
+Hourly reports at #{'https://t.me/mining_pools_monitor'}
 EOS
-    send_message msg, help
+    send_message msg, mnfe(help)
   end
 
   def help_cmd cmd
     help = Command::LIST[cmd].help
     return unless help
     help = help.call if help.is_a? Proc
-    "*/#{e cmd.to_s}.<coin>* #{help}"
+    "*/#{me cmd.to_s}.<coin>* #{help}"
   end
 
 end

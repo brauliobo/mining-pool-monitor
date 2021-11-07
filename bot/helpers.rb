@@ -112,18 +112,22 @@ class Bot
 
     def parse_text text, parse_mode:
       return unless text
-      text = if parse_mode == 'MarkdownV2' then me text elsif parse_mode == 'HTML' then text else text end
       text = text.first 4090 if text.size > 4096
       text
     end
 
-    MARKDOWN_RESERVED = %w[\# [ ] ( ) ~ # + - = | { } . ! < >]
-    MARKDOWN_FORMAT   = %w[* _ `]
+    MARKDOWN_NON_FORMAT = %w[\# [ ] ( ) ~ # + - = | { } . ! < >]
+    MARKDOWN_FORMAT     = %w[* _ `]
+    MARKDOWN_ALL        = MARKDOWN_FORMAT + MARKDOWN_NON_FORMAT
     def me t
-      MARKDOWN_RESERVED.each{ |c| t = t.gsub c, "\\#{c}" }
+      MARKDOWN_ALL.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
-    def e t
+    def mnfe t
+      MARKDOWN_NON_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
+      t
+    end
+    def mfe t
       MARKDOWN_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
