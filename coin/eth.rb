@@ -87,8 +87,13 @@ module Coin
         },
       },
       zetpool: {
-        url:  'https://eth.zet-tech.eu/#/account/%{w}',
-        api:  'https://eth.zet-tech.eu/api/accounts/%{w}',
+        url:  'https://zetpool.org/eth/#/account/%{w}',
+        api:  'https://zetpool.org/eth/api/accounts/%{w}',
+        read: :open_ethereum_pool_read,
+      },
+      'zetpool-pps': {
+        url:  'https://zetpool.org/eth-pps/#/account/%{w}',
+        api:  'https://zetpool.org/eth-pps/api/accounts/%{w}',
         read: :open_ethereum_pool_read,
       },
       crazypool: {

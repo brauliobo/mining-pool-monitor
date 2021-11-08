@@ -49,7 +49,11 @@
   * No miners listing
   * Only average hashrate is available
   * Private dashboard at https://www.viabtc.com/observer/dashboard?access_key=XXX
-* ŻET Pool
-  * Miners listing at https://eth.zet-tech.eu/#/miners
+* ŻET Pool - PPLNS
+  * Miners listing at https://zetpool.org/eth/#/miners
   * Has reported hashrate
-  * Dashboard example: https://eth.zet-tech.eu/#/account/0x42401988e067633c71245ad836f814c2d36f11f7
+  * Dashboard example: https://zetpool.org/eth/#/account/0x42401988e067633c71245ad836f814c2d36f11f7
+* ŻET Pool - PPS
+  * Miners listing at https://zetpool.org/eth-pps/#/miners
+  * Has reported hashrate
+  * Dashboard example: https://zetpool.org/eth-pps/#/account/0x42401988e067633c71245ad836f814c2d36f11f7
