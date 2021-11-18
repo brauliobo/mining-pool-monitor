@@ -107,13 +107,13 @@ class Bot
       tracked = SymMash.new DB[:wallets_tracked].where(data.slice :coin, :pool, :wallet).first if data
 
       text = <<-EOS
-#{coin.class.url p, w}
-*balance*: #{data&.balance} #{coin.sym}
-*hashrate*: #{data&.hashrate} #{coin.hr_unit}
-*tracking since*: #{tracked&.started_at || Time.now}
-*last read at*: #{tracked&.last_read_at}
+#{me coin.class.url p, w}
+*balance*: #{me data&.balance} #{coin.sym}
+*hashrate*: #{me data&.hashrate} #{coin.hr_unit}
+*tracking since*: #{me tracked&.started_at || Time.now}
+*last read at*: #{me tracked&.last_read_at}
 EOS
-      send_message msg, mnfe(text)
+      send_message msg, text
 
       Tracked.track data rescue nil
     end

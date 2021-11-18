@@ -120,14 +120,17 @@ class Bot
     MARKDOWN_FORMAT     = %w[* _ `]
     MARKDOWN_ALL        = MARKDOWN_FORMAT + MARKDOWN_NON_FORMAT
     def me t
+      t = t.to_s
       MARKDOWN_ALL.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
     def mnfe t
+      t = t.to_s
       MARKDOWN_NON_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
     def mfe t
+      t = t.to_s
       MARKDOWN_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
