@@ -15,7 +15,8 @@ module Coin
       avg_hashrate ||= data.hashrate / oep_hscale
 
       hashrate = data.totalSubmitHashrate if data.totalSubmitHashrate
-      hashrate = data.workers.sum{ |_, w| if w.reportedHr then w.reportedHr.first / oep_hscale else 0 end } if data.workers
+      wk_hr    = data.workers.sum{ |_, w| w.reportedHr || w.rhr || 0 }
+      hashrate = wk_hr / oep_hscale  if wk_hr > 0
 
       SymMash.new(
         balance:  data.stats.balance / oep_bscale,
