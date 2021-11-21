@@ -64,6 +64,8 @@ module Coin
       adata.each do |d|
         return puts "#{name}/#{pool}/#{wallet}: discarding deviating hashrate" if d.current_hashrate and high_mh_deviation? d.current_hashrate, d.hashrate
 
+        # missing reported
+        d.hashrate ||= d.average_hashrate
         # due to conflicting worker name in multiple miners, reported can be lower
         d.hashrate = d.average_hashrate if d.average_hashrate and high_mh_deviation? d.average_hashrate, d.hashrate
 
