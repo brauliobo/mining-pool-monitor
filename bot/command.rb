@@ -159,7 +159,7 @@ EOS
         .where(Sequel.ilike :wallet, w)
         .order(Sequel.desc(:read_at), Sequel.asc(:pool))
         .offset(off&.to_i)
-        .limit(20)
+        .limit(24)
       send_ds msg, ds
     end
 

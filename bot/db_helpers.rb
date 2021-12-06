@@ -4,13 +4,13 @@ class Bot
     def db_data ds, aliases: {}, **params, &block
       data = ds.to_a
       return "no data returned" if data.blank?
-      data = ds.map do |p|
+      data = data.map do |p|
         p = SymMash.new p
         block.call p if block
         p
       end
       Tabulo::Table.new data do |t|
-        ds.first.keys.each do |k|
+        data.first.keys.each do |k|
           t.add_column aliases[k] || k, &k
         end
       end.pack
