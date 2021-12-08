@@ -49,6 +49,17 @@ module Coin
           )
         },
       },
+      futurepool: {
+        url:  'https://futurepool.io/farmer-dashboard/%{w}',
+        api:  'http://api.futurepool.io/v1/farmer/%{w}',
+        read: -> i {
+          data = get i.api, w: i.wallet
+          SymMash.new(
+            balance:  data.total_balance.to_f / 1.0e12,
+            hashrate: data.estimated_total_space.to_f / 1.0e12,
+          )
+        },
+      },
     )
 
   end
