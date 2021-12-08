@@ -9,17 +9,8 @@ select
 FROM initial_date, generate_series(initial_date.d, current_date - '1 day'::interval, '1 day'::interval) start_date
 order by start_date DESC;
 
-drop view if exists wallet_rewards cascade;
+drop view if exists last_pairs_to_update cascade;
 DROP materialized view if exists pairs_materialized cascade;
-DROP materialized view if exists pairs_parsed cascade;
-
-create or replace view wallet_rewards as
-select
-  r.*,
-  balance - lag(balance) over (partition by r.pool, r.wallet order by r.read_at) as reward
-from wallet_reads r
-WHERE balance >= 0 --f2pool has a lot of negative balances
-order by r.coin, r.pool, r.wallet, r.read_at desc;
 
 create or replace view last_pairs_to_update as
 select
@@ -55,9 +46,17 @@ select
   avg(wr.hashrate) as avg_hashrate,
   sum(wr.reward) as reward
 from last_pairs_to_update r
-join wallet_rewards wr on wr.coin = r.coin and wr.pool = r.pool and wr.wallet = r.wallet
- and wr.read_at >= r.first_read and wr.read_at <= r.second_read
- and reward > -0.02 -- some pools' balances go down
+join lateral (
+select
+  balance - lag(balance) over (partition by wr.pool, wr.wallet order by wr.read_at) as reward,
+  wr.*
+from wallet_reads wr
+WHERE wr.coin = r.coin and wr.pool = r.pool and wr.wallet = r.wallet
+  and wr.read_at >= r.first_read and wr.read_at <= r.second_read
+  and balance >= 0 --f2pool has a lot of negative balances
+) wr on wr.coin = r.coin and wr.pool = r.pool and wr.wallet = r.wallet
+    and wr.read_at >= r.first_read and wr.read_at <= r.second_read
+    and reward > -0.02 -- some pools' balances go down
 group by 1,2,3,4,5,6,7,8,9,10,11,12
 order by iseq, hours desc, second_read DESC;
 
