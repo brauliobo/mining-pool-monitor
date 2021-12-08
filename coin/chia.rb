@@ -50,7 +50,7 @@ module Coin
         },
       },
       futurepool: {
-        url:  'https://futurepool.io/farmer-dashboard/%{w}',
+        url:  'https://futurepool.io/farmer-dashboard/%{w}/stats',
         api:  'http://api.futurepool.io/v1/farmer/%{w}',
         read: -> i {
           data = get i.api, w: i.wallet
