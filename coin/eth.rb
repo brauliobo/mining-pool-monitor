@@ -107,10 +107,17 @@ module Coin
         api:  'https://beta.besafepool.com/api/accounts/%{w}',
         read: :open_ethereum_pool_read,
       },
-      garimpool: {
-        url:  'https://garimpool.com.br/#/account/%{w}',
-        api:  'https://garimpool.com.br/api/accounts/%{w}',
-        read: :open_ethereum_pool_read,
+      woolypooly: {
+        url:  'https://woolypooly.com/en/coin/eth/wallet/%{w}',
+        api:  'https://api.woolypooly.com/api/eth-1/accounts/%{w}',
+        read: -> i {
+          data = get i.api, w: i.wallet
+          hr   = data.perfomance.pplns.sum{ |p| p.hashrate } / data.perfomance.pplns.size
+          SymMash.new(
+            balance:  data.stats.balance,
+            hashrate: hr / 1.0e6,
+          )
+        },
       },
       flexpool: {
         url:      'https://flexpool.io/miner/eth/%{w}',
