@@ -68,10 +68,11 @@ module Coin
         balance:  'https://billing.ezil.me/balances/%{w}',
         hashrate: 'https://stats.ezil.me/current_stats/%{w}/reported',
         read: -> i {
+          hr = get(i.hashrate, w: i.wallet).eth
           SymMash.new(
             balance:  get(i.balance, w: i.wallet).eth,
-            hashrate: get(i.hashrate, w: i.wallet).eth.reported_hashrate / 1.0e6,
-            average_hashrate: get(i.hashrate, w: i.wallet).eth.average_hashrate / 1.0e6,
+            hashrate: hr.reported_hashrate / 1.0e6,
+            average_hashrate: hr.average_hashrate / 1.0e6,
           )
         },
       },
