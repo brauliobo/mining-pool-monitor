@@ -70,7 +70,8 @@ module Coin
         read: -> i {
           SymMash.new(
             balance:  get(i.balance, w: i.wallet).eth,
-            hashrate: get(i.hashrate, w: i.wallet).reported_hashrate / 1.0e6,
+            hashrate: get(i.hashrate, w: i.wallet).eth.reported_hashrate / 1.0e6,
+            average_hashrate: get(i.hashrate, w: i.wallet).eth.average_hashrate / 1.0e6,
           )
         },
       },
