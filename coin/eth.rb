@@ -78,8 +78,8 @@ module Coin
       },
       cruxpool: {
         url:      'https://cruxpool.com/eth/miner/%{w}',
-        hashrate: 'https://us3.cruxpool.com/api/eth/miner/%{w}',
-        balance:  'https://us3.cruxpool.com/api/eth/miner/%{w}/balance',
+        hashrate: 'https://cruxpool.com/api/eth/miner/%{w}',
+        balance:  'https://cruxpool.com/api/eth/miner/%{w}/balance',
         read:  -> i {
           hashrate = get(i.hashrate, w: i.wallet).data
           SymMash.new(
