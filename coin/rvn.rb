@@ -15,6 +15,12 @@ module Coin
     self.pools['2miners'].url.gsub! 'eth', 'rvn'
     self.pools['2miners'].api.gsub! 'eth', 'rvn'
 
+    self.pools.cruxpool = Eth.pools.cruxpool.deep_dup
+    self.pools.cruxpool.scale.balance = 1.0e8
+    self.pools.cruxpool.url.gsub! 'eth', 'rvn'
+    self.pools.cruxpool.hashrate.gsub! 'eth', 'rvn'
+    self.pools.cruxpool.balance.gsub!  'eth', 'rvn'
+
     self.pools.flypool = SymMash.new(
       url: 'https://ravencoin.flypool.org/miners/%{w}/dashboard',
       api: 'https://api-ravencoin.flypool.org/miner/%{w}/dashboard',

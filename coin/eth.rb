@@ -80,12 +80,13 @@ module Coin
         url:      'https://cruxpool.com/eth/miner/%{w}',
         hashrate: 'https://cruxpool.com/api/eth/miner/%{w}',
         balance:  'https://cruxpool.com/api/eth/miner/%{w}/balance',
+        scale:    {balance: 1.0e9, hr: 1.0e6},
         read:  -> i {
           hashrate = get(i.hashrate, w: i.wallet).data
           SymMash.new(
-            balance:  get(i.balance, w: i.wallet).data.balance.to_f / 1.0e9,
-            hashrate: hashrate.reportedHashrate / 1.0e6,
-            average_hashrate: hashrate.avgHashrate / 1.0e6,
+            balance:  get(i.balance, w: i.wallet).data.balance.to_f / i.scale.balance,
+            hashrate: hashrate.reportedHashrate / i.scale.hr,
+            average_hashrate: hashrate.avgHashrate / i.scale.hr,
           )
         },
       },
