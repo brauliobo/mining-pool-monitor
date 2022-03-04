@@ -12,9 +12,10 @@ module Coin
     self.pools['2miners'].url.gsub! 'eth', 'erg'
     self.pools['2miners'].api.gsub! 'eth', 'erg'
 
-    self.pools.woolypooly = Eth.pools.woolypooly.deep_dup
-    self.pools.woolypooly.url.gsub! 'eth', 'erg'
-    self.pools.woolypooly.api.gsub! 'eth', 'ergo'
+    self.pools.cruxpool = Eth.pools.cruxpool.deep_dup
+    self.pools.cruxpool.url.gsub! 'eth', 'ergo'
+    self.pools.cruxpool.hashrate.gsub! 'eth', 'ergo'
+    self.pools.cruxpool.balance.gsub!  'eth', 'ergo'
 
     self.pools.merge!(
       herominers: {
