@@ -17,28 +17,20 @@ module Coin
     self.pools.cruxpool.hashrate.gsub! 'eth', 'ergo'
     self.pools.cruxpool.balance.gsub!  'eth', 'ergo'
 
-    self.pools.merge!(
-      herominers: {
-        url:  'https://ergo.herominers.com/?mining_address=%{w}',
-        api:  'https://ergo.herominers.com/api/stats_address?address=%{w}&recentBlocksAmount=20&longpoll=false',
-        read: -> i {
-          data = get i.api, w: i.wallet
-          SymMash.new(
-            balance:  data.stats.balance.to_i / 1.0e9,
-            hashrate: data.workers.sum{ |w| w.hashrate_24h }.to_i / 1.0e6,
-          )
-        },
-      },
-    )
+    self.pools.flypool = Rvn.pools.flypool.deep_dup
+    self.pools.flypool.scale.balance = 1.0e9
+    self.pools.flypool.url.gsub! 'ravencoin', 'ergo'
+    self.pools.flypool.api.gsub! 'ravencoin', 'ergo'
 
-    self.pools.flypool = SymMash.new(
-      url: 'https://ergo.flypool.org/miners/%{w}/dashboard',
-      api: 'https://api-ergo.flypool.org/miner/%{w}/dashboard',
-      read: -> i {
-        data = get(i.api, w: i.wallet).data
+    self.pools.herominers = SymMash.new(
+      url:   'https://ergo.herominers.com/?mining_address=%{w}',
+      api:   'https://ergo.herominers.com/api/stats_address?address=%{w}&recentBlocksAmount=20&longpoll=false',
+      scale: {balance: 1.0e9, hr: 1.0e6},
+      read:  -> i {
+        data = get i.api, w: i.wallet
         SymMash.new(
-          balance:  data.currentStatistics.unpaid / 1.0e9,
-          hashrate: data.currentStatistics.currentHashrate / 1.0e6,
+          balance:  data.stats.balance.to_i / i.scale.balance,
+          hashrate: data.workers.sum{ |w| w.hashrate_24h }.to_i / i.scale.hr,
         )
       },
     )

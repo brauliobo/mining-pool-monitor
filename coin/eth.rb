@@ -30,17 +30,19 @@ module Coin
         url:      'https://minerall.io/minerstats/%{w}',
         balance:  'https://user.minerall.io/api/statistics/last-activity/%{w}',
         hashrate: 'https://user.minerall.io/api/statistics/hashrate-chart/%{w}',
+        scale:    {hr: 1.0e6},
         read:  -> i {
           hashrates = get(i.hashrate, w: i.wallet)
           SymMash.new(
             balance:  get(i.balance, w: i.wallet).first.total_balance.to_f,
-            hashrate: hashrates.sum{ |d| d.hashrate.to_f } / hashrates.size / 1.0e6,
+            hashrate: hashrates.sum{ |d| d.hashrate.to_f } / hashrates.size / i.scale.hr,
           )
         },
       },
       binance: {
-        url:  'https://pool.binance.com/en/statistics?urlParams=%{w}',
-        api:  'https://pool.binance.com/mining-api/v1/public/pool/profit/miner?observerToken=%{w}&pageSize=30',
+        url:   'https://pool.binance.com/en/statistics?urlParams=%{w}',
+        api:   'https://pool.binance.com/mining-api/v1/public/pool/profit/miner?observerToken=%{w}&pageSize=30',
+        scale: {hr: 1.0e6},
         read:  -> i {
           data = get i.api, w: i.wallet
           data.data.accountProfits.map do |d|
@@ -48,7 +50,7 @@ module Coin
             SymMash.new(
               read_at:  Time.at(d.time / 1000),
               balance:  d.profitAmount,
-              hashrate: d.dayHashRate / 1.0e6,
+              hashrate: d.dayHashRate / i.scale.hr,
             )
           end
         },
@@ -67,12 +69,13 @@ module Coin
         url:      'https://ezil.me/personal_stats?wallet=%{w}&coin=eth',
         balance:  'https://billing.ezil.me/balances/%{w}',
         hashrate: 'https://stats.ezil.me/current_stats/%{w}/reported',
+        scale:    {hr: 1.0e6},
         read: -> i {
           hr = get(i.hashrate, w: i.wallet).eth
           SymMash.new(
             balance:  get(i.balance, w: i.wallet).eth,
-            hashrate: hr.reported_hashrate / 1.0e6,
-            average_hashrate: hr.average_hashrate / 1.0e6,
+            hashrate: hr.reported_hashrate / i.scale.hr,
+            average_hashrate: hr.average_hashrate / i.scale.hr,
           )
         },
       },
@@ -111,14 +114,15 @@ module Coin
         read: :open_ethereum_pool_read,
       },
       woolypooly: {
-        url:  'https://woolypooly.com/en/coin/eth/wallet/%{w}',
-        api:  'https://api.woolypooly.com/api/eth-1/accounts/%{w}',
+        url:   'https://woolypooly.com/en/coin/eth/wallet/%{w}',
+        api:   'https://api.woolypooly.com/api/eth-1/accounts/%{w}',
+        scale: {hr: 1.0e6},
         read: -> i {
           data = get i.api, w: i.wallet
           hr   = data.perfomance.pplns.sum{ |p| p.hashrate } / data.perfomance.pplns.size
           SymMash.new(
             balance:  data.stats.balance,
-            hashrate: hr / 1.0e6,
+            hashrate: hr / i.scale.hr,
           )
         },
       },
@@ -126,25 +130,27 @@ module Coin
         url:      'https://flexpool.io/miner/eth/%{w}',
         balance:  'https://api.flexpool.io/v2/miner/balance?coin=eth&address=%{w}',
         hashrate: 'https://api.flexpool.io/v2/miner/workers?coin=eth&address=%{w}',
+        scale:    {balance: 1.0e18, hr: 1.0e6},
         read: -> i {
           hr = get(i.hashrate, w: i.wallet).result
           SymMash.new(
-            balance:  get(i.balance, w: i.wallet).result.balance / 1.0e18,
-            hashrate: hr.sum(&:reportedHashrate) / 1.0e6,
-            average_hashrate: hr.sum(&:averageEffectiveHashrate) / 1.0e6,
+            balance:  get(i.balance, w: i.wallet).result.balance / i.scale.balance,
+            hashrate: hr.sum(&:reportedHashrate) / i.scale.hr,
+            average_hashrate: hr.sum(&:averageEffectiveHashrate) / i.scale.hr,
           )
         },
       },
       ethermine: {
-        url:  'https://ethermine.org/miners/%{w}',
-        api:  'https://api.ethermine.org/miner/%{w}/dashboard',
+        url:   'https://ethermine.org/miners/%{w}',
+        api:   'https://api.ethermine.org/miner/%{w}/dashboard',
+        scale: {balance: 1.0e18, hr: 1.0e6},
         read: -> i {
           w = i.wallet.downcase.gsub(/^0x/, '')
           data = get(i.api, w: w).data
           SymMash.new(
-            balance:  data.currentStatistics.unpaid / 1.0e18,
-            hashrate: data.currentStatistics.reportedHashrate / 1.0e6,
-            current_hashrate: data.currentStatistics.currentHashrate / 1.0e6,
+            balance:  data.currentStatistics.unpaid / i.scale.balance,
+            hashrate: data.currentStatistics.reportedHashrate / i.scale.hr,
+            current_hashrate: data.currentStatistics.currentHashrate / i.scale.hr,
           )
         },
       },
@@ -167,25 +173,27 @@ module Coin
         },
       },
       realpool: {
-        url:  'https://realpool.com.br/?#eth/dashboard?address=%{w}',
-        api:  'https://realpool.com.br:4000/api/pools/eth/miners/%{w}',
+        url:   'https://realpool.com.br/?#eth/dashboard?address=%{w}',
+        api:   'https://realpool.com.br:4000/api/pools/eth/miners/%{w}',
+        scale: {hr: 1.0e6},
         read: -> i {
           data = get i.api, w: i.wallet
           SymMash.new(
             balance:  data.pendingBalance,
-            hashrate: data.performance.workers.map{ |k,v| v.hashrate / 1.0e6 }.sum,
+            hashrate: data.performance.workers.map{ |k,v| v.hashrate }.sum / i.scale.hr,
           )
         },
       },
       f2pool: {
         url:  'https://www.f2pool.com/eth/%{w}',
         api:  'https://api.f2pool.com/eth/%{w}',
+        scale: {hr: 1.0e6},
         read: -> i {
           data = get i.api, w: i.wallet
           SymMash.new(
             balance:  data.balance,
-            hashrate: data.local_hash / 1.0e6,
-            average_hashrate: data.hashes_last_day / (3600 * 24) / 1.0e6,
+            hashrate: data.local_hash / i.scale.hr,
+            average_hashrate: data.hashes_last_day / (3600 * 24) / i.scale.hr,
           )
         },
       },
@@ -193,13 +201,14 @@ module Coin
         url:     'https://hiveon.net/eth?miner=%{w}',
         stats:   'https://hiveon.net/api/v1/stats/miner/%{w}/ETH',
         balance: 'https://hiveon.net/api/v1/stats/miner/%{w}/ETH/billing-acc',
+        scale:   {hr: 1.0e6},
         read: -> i {
           w = i.wallet.downcase.gsub(/^0x/, '')
           stats = get(i.stats, w: w)
           SymMash.new(
             balance:  get(i.balance, w: w).totalUnpaid,
-            hashrate: stats.reportedHashrate.to_i / 1.0e6,
-            average_hashrate: stats.hashrate24h.to_i / 1.0e6,
+            hashrate: stats.reportedHashrate.to_i / i.scale.hr,
+            average_hashrate: stats.hashrate24h.to_i / i.scale.hr,
           )
         },
       },
@@ -219,10 +228,11 @@ module Coin
         url:     'https://www.sparkpool.com/miner/%{w}/data?currency=ETH',
         balance: 'https://www.sparkpool.com/v1/bill/stats?miner=%{w}&currency=ETH',
         stats:   'https://www.sparkpool.com/v1/miner/stats?miner=%{w}&currency=ETH',
+        scale:   {hr: 1.0e6},
         read: -> i {
           SymMash.new(
             balance:  get(i.balance, w: i.wallet).data.balance,
-            hashrate: get(i.stats, w: i.wallet).data.meanLocalHashrate24h.to_i / 1.0e6,
+            hashrate: get(i.stats, w: i.wallet).data.meanLocalHashrate24h.to_i / i.scale.hr,
           )
         },
       },

@@ -16,8 +16,8 @@ module Coin
     self.pools.cruxpool.balance.gsub!  'eth', 'etc'
 
     self.pools.flypool = Eth.pools.ethermine.merge(
-      url:  'https://etc.ethermine.org/miners/%{w}',
-      api:  'https://api-etc.ethermine.org/miner/%{w}/dashboard',
+      url: 'https://etc.ethermine.org/miners/%{w}',
+      api: 'https://api-etc.ethermine.org/miner/%{w}/dashboard',
     )
 
   end
