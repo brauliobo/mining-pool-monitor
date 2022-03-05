@@ -22,6 +22,10 @@ module Coin
     self.pools.flypool.url.gsub! 'ravencoin', 'ergo'
     self.pools.flypool.api.gsub! 'ravencoin', 'ergo'
 
+    self.pools.woolypooly = Eth.pools.woolypooly.deep_dup
+    self.pools.woolypooly.url.gsub! 'eth', 'erg'
+    self.pools.woolypooly.api.gsub! 'eth', 'ergo'
+
     self.pools.herominers = SymMash.new(
       url:   'https://ergo.herominers.com/?mining_address=%{w}',
       api:   'https://ergo.herominers.com/api/stats_address?address=%{w}&recentBlocksAmount=20&longpoll=false',
