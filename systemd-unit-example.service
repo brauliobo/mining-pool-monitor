@@ -1,7 +1,7 @@
 [Unit]
 Description=mining_pools_monitor
 After=network-online.target
-Wants=network-online.target systemd-networkd-wait-online.service
+Wants=network-online.target
 
 [Service]
 User=braulio
