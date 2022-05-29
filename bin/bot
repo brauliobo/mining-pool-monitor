@@ -2,5 +2,5 @@
 
 require_relative '../monitor'
 
-bot = Bot.new ENV['TOKEN']
+bot = Bot.new
 bot.start

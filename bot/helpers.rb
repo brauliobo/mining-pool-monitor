@@ -1,8 +1,13 @@
+require 'puma'
+require 'roda'
+
 class Bot
   module Helpers
 
     extend ActiveSupport::Concern
     included do
+      class_attribute :bot_name
+
       class_attribute :error_delete_time
       self.error_delete_time = 30.seconds
 
@@ -18,6 +23,26 @@ class Bot
           puts "deleting #{id}"
         end
       end
+    end
+
+    class WebApp < Roda
+       plugin :indifferent_params
+       route do |r|
+          r.on 'admin_message' do
+            r.post do
+              ret = $bot.send_message $bot.admin_msg, r.params[:m], **r.params.to_h.symbolize_keys
+              ret.to_h.to_json
+            end
+          end
+       end
+    end
+
+    def start_webserver socket: "/tmp/#{bot_name}.socket"
+      server = Puma::Server.new WebApp.freeze.app, Puma::Events.strings
+      server.add_unix_listener socket
+      puts "Server listening at #{socket}"
+      server.run
+      [:INT, :TERM].each { |sig| trap(sig) { server.stop } }
     end
 
     ADMIN_CHAT_ID  = ENV['ADMIN_CHAT_ID']&.to_i
@@ -86,17 +111,37 @@ class Bot
       end
     end
 
+    def send_invoice msg
+      api.send_invoice(provider_token: Bot.pm_token,
+        title:       'test',
+        chat_id:     91118049, 
+        description: 'test',
+        payload:     'test',
+        currency:    'USD',
+        prices:      [{label: 'test', amount: 100}],
+      )
+    end
+
     def report_error msg, e, context: nil
       return unless msg
-      msg_ct = if msg.respond_to? :text then msg.text else msg.data end
-      error  = "<b>msg</b>: #{he msg_ct}"
+      error  = ''
       error << "\n\n<b>context</b>: #{he context}" if context
       error << "\n\n<b>error</b>: <pre>#{he e.message}\n"
       error << "#{he e.backtrace.join "\n"}</pre>"
 
       STDERR.puts "error: #{error}"
       send_message msg, error, parse_mode: 'HTML', delete_both: error_delete_time
-      send_message admin_msg, error, parse_mode: 'HTML' if ADMIN_CHAT_ID != msg.chat.id
+      admin_report msg, error unless from_admin? msg
+    end
+
+    def admin_report msg, _error, status: 'error'
+      return if ADMIN_CHAT_ID != msg.chat.id
+
+      msg_ct = if msg.respond_to? :text then msg.text else msg.data end
+      error  = "<b>msg</b>: #{he msg_ct}"
+      error << "\n\n<b>#{status}</b>: <pre>#{he _error}</pre>\n"
+
+      send_message admin_msg, error, parse_mode: 'HTML'
     end
 
     def fake_msg chat_id
@@ -116,21 +161,18 @@ class Bot
       text
     end
 
-    MARKDOWN_NON_FORMAT = %w[\# [ ] ( ) ~ # + - = | { } . ! < >]
+    MARKDOWN_NON_FORMAT = %w[\# / [ ] ( ) ~ # + - = | { } . ! < >]
     MARKDOWN_FORMAT     = %w[* _ `]
     MARKDOWN_ALL        = MARKDOWN_FORMAT + MARKDOWN_NON_FORMAT
     def me t
-      t = t.to_s
       MARKDOWN_ALL.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
     def mnfe t
-      t = t.to_s
       MARKDOWN_NON_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end
     def mfe t
-      t = t.to_s
       MARKDOWN_FORMAT.each{ |c| t = t.gsub c, "\\#{c}" }
       t
     end

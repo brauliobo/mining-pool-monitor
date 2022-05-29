@@ -1,4 +1,5 @@
 require 'telegram/bot'
+require 'tdlib-ruby'
 require 'tabulo'
 
 require_relative 'bot/report'
@@ -18,14 +19,28 @@ class Bot
   DEFAULT_COIN = :eth
   attr_reader :coins
 
-  def initialize token
+  class_attribute :token
+  class_attribute :pm_token
+  self.token    = ENV['TOKEN']
+  self.pm_token = ENV['PM_TOKEN']
+
+  self.bot_name = 'mining-pools-bot'
+
+  TD.configure do |config| 
+    config.client.api_id = ENV['TDLIB_API_ID']
+    config.client.api_hash = ENV['TDLIB_API_HASH']
+  end
+  TD::Api.set_log_verbosity_level 0
+  class_attribute :td
+  self.td = TD::Client.new
+
+  def initialize
     @coins = Coin::Base.instances
-    @token = token
   end
 
   def start
     wait_net_up
-    Telegram::Bot::Client.run @token, logger: Logger.new(STDOUT) do |bot|
+    Telegram::Bot::Client.run token, logger: Logger.new(STDOUT) do |bot|
       @bot = bot
 
       puts 'bot: started, listening'

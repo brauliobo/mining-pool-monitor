@@ -3,7 +3,7 @@
 require_relative '../monitor'
 require 'pry'
 
-bot = Bot.new ENV['TOKEN']
+bot = Bot.new
 Thread.new{ bot.start }
 Pry.start bot
 
