@@ -28,16 +28,9 @@ class Bot
 
   self.bot_name = 'mining-pools-bot'
 
-  TD.configure do |config| 
-    config.client.api_id = ENV['TDLIB_API_ID']
-    config.client.api_hash = ENV['TDLIB_API_HASH']
-  end
-  TD::Api.set_log_verbosity_level 0
-  class_attribute :td
-  self.td = TD::Client.new timeout: 1.minute
-
   def initialize
     @coins = Coin::Base.instances
+    td.connect.wait! rescue nil
   end
 
   def start
