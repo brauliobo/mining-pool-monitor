@@ -10,7 +10,8 @@ gem 'sqlite3'
 gem 'pg'
 
 gem 'telegram-bot-ruby'
-gem 'tdlib-ruby'
+gem 'tdlib-ruby', github: 'seorgiy/tdlib-ruby'
+gem 'tdlib-schema', github: 'seorgiy/tdlib-schema'
 
 gem 'tabulo'
 

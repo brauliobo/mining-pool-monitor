@@ -6,6 +6,7 @@ require_relative 'bot/report'
 require_relative 'bot/command'
 require_relative 'bot/helpers'
 require_relative 'bot/db_helpers'
+require_relative 'tdlib/helpers'
 
 Thread.report_on_exception = false
 
@@ -15,6 +16,7 @@ class Bot
 
   include Helpers
   include DbHelpers
+  include Tdlib::Helpers
 
   DEFAULT_COIN = :eth
   attr_reader :coins
@@ -32,7 +34,7 @@ class Bot
   end
   TD::Api.set_log_verbosity_level 0
   class_attribute :td
-  self.td = TD::Client.new
+  self.td = TD::Client.new timeout: 1.minute
 
   def initialize
     @coins = Coin::Base.instances
