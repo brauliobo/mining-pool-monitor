@@ -30,7 +30,7 @@ class Bot
 
   def initialize
     @coins = Coin::Base.instances
-    td.connect.wait! rescue nil
+    td.connect.wait! rescue nil if ENV['TD_CONNECT']
   end
 
   def start
